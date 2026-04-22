@@ -1,12 +1,60 @@
 [submodule "plugin/xbCode"]
 	path = plugin/xbCode
-	url = https://gitee.com/xbcode-plugin/xbCode.git
+	url = git@gitee.com:xbcode-plugin/xbCode.git
 [submodule "plugin/xbUpload"]
 	path = plugin/xbUpload
-	url = https://gitee.com/xbcode-plugin/xbUpload.git
+	url = git@gitee.com:xbcode-plugin/xbUpload.git
 [submodule "plugin/xbCrontab"]
 	path = plugin/xbCrontab
-	url = https://gitee.com/xbcode-plugin/xbCrontab.git
+	url = git@gitee.com:xbcode-plugin/xbCrontab.git
 [submodule "plugin/xbDeveloper"]
 	path = plugin/xbDeveloper
-	url = https://gitee.com/xbcode-plugin/xbDeveloper.git
+	url = git@gitee.com:xbcode-plugin/xbDeveloper.git
+[submodule "plugin/xbUser"]
+	path = plugin/xbUser
+	url = git@gitee.com:xbcode-plugin/xbUser.git
+[submodule "plugin/xbDevDoc"]
+	path = plugin/xbDevDoc
+	url = git@gitee.com:xbcode-plugin/xbDevDoc.git
+[submodule "plugin/xbAiAudio"]
+	path = plugin/xbAiAudio
+	url = git@gitee.com:xbcode-plugin/xbAiAudio.git
+[submodule "plugin/xbAiGateway"]
+	path = plugin/xbAiGateway
+	url = git@gitee.com:xbcode-plugin/xbAiGateway.git
+[submodule "plugin/xbAiImageEnhance"]
+	path = plugin/xbAiImageEnhance
+	url = git@gitee.com:xbcode-plugin/xbAiImageEnhance.git
+[submodule "plugin/xbAiImage"]
+	path = plugin/xbAiImage
+	url = git@gitee.com:xbcode-plugin/xbAiImage.git
+[submodule "plugin/xbAiParser"]
+	path = plugin/xbAiParser
+	url = git@gitee.com:xbcode-plugin/xbAiParser.git
+[submodule "plugin/xbMovieApp"]
+	path = plugin/xbMovieApp
+	url = git@gitee.com:xbcode-plugin/xbMovieApp.git
+[submodule "plugin/xbMovieCharacter"]
+	path = plugin/xbMovieCharacter
+	url = git@gitee.com:xbcode-plugin/xbMovieCharacter.git
+[submodule "plugin/xbMovieExport"]
+	path = plugin/xbMovieExport
+	url = git@gitee.com:xbcode-plugin/xbMovieExport.git
+[submodule "plugin/xbMovieScene"]
+	path = plugin/xbMovieScene
+	url = git@gitee.com:xbcode-plugin/xbMovieScene.git
+[submodule "plugin/xbMoviescript"]
+	path = plugin/xbMoviescript
+	url = git@gitee.com:xbcode-plugin/xbMoviescript.git
+[submodule "plugin/xbMovieStoryboard"]
+	path = plugin/xbMovieStoryboard
+	url = git@gitee.com:xbcode-plugin/xbMovieStoryboard.git
+[submodule "plugin/xbTaskQueue"]
+	path = plugin/xbTaskQueue
+	url = git@gitee.com:xbcode-plugin/xbTaskQueue.git
+[submodule "plugin/xbUserPackage"]
+	path = plugin/xbUserPackage
+	url = git@gitee.com:xbcode-plugin/xbUserPackage.git
+[submodule "plugin/xbUserWork"]
+	path = plugin/xbUserWork
+	url = git@gitee.com:xbcode-plugin/xbUserWork.git
