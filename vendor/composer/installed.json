@@ -1194,6 +1194,75 @@
             "install-path": "../hg/apidoc"
         },
         {
+            "name": "hg/apidoc-export",
+            "version": "v1.0.0",
+            "version_normalized": "1.0.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/HGthecode/apidoc-export.git",
+                "reference": "f347ee400fdac75aca307a292f5d2ab6afc85519"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/HGthecode/apidoc-export/zipball/f347ee400fdac75aca307a292f5d2ab6afc85519",
+                "reference": "f347ee400fdac75aca307a292f5d2ab6afc85519",
+                "shasum": ""
+            },
+            "require": {
+                "hg/apidoc": "^5.3 || dev-main",
+                "php": "^7.1 || ^8.0"
+            },
+            "time": "2024-12-25T13:58:03+00:00",
+            "type": "library",
+            "extra": {
+                "think": {
+                    "config": {
+                        "apidoc-export": "src/config.php"
+                    }
+                },
+                "hyperf": {
+                    "config": "hg\\apidoc\\ConfigProvider"
+                },
+                "laravel": {
+                    "providers": [
+                        "hg\\apidoc\\export\\providers\\LaravelService"
+                    ]
+                }
+            },
+            "installation-source": "dist",
+            "autoload": {
+                "psr-4": {
+                    "hg\\apidoc\\export\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "hg-code",
+                    "email": "376401263@qq.com"
+                }
+            ],
+            "description": "Apidoc文档导出插件",
+            "keywords": [
+                "apidoc",
+                "api文档",
+                "markdown",
+                "php接口文档",
+                "接口文档",
+                "文档导出插件",
+                "注释生成",
+                "自动生成api"
+            ],
+            "support": {
+                "issues": "https://github.com/HGthecode/apidoc-export/issues",
+                "source": "https://github.com/HGthecode/apidoc-export/tree/v1.0.0"
+            },
+            "install-path": "../hg/apidoc-export"
+        },
+        {
             "name": "illuminate/bus",
             "version": "v10.49.0",
             "version_normalized": "10.49.0.0",
@@ -6769,7 +6838,5 @@
         }
     ],
     "dev": true,
-    "dev-package-names": [
-        "deployer/deployer"
-    ]
+    "dev-package-names": []
 }

@@ -11,7 +11,7 @@
     "description": "积木云核心框架，提供插件化开发基础能力",
     "authors": [
         {
-            "name": "贵州积木云网络科技有限公司",
+            "name": "贵州云铺网络科技有限公司",
             "email": "958416459@qq.com",
             "role": "Developer"
         },
@@ -55,7 +55,9 @@
         "symfony/workflow": "~6.4.32",
         "symfony/property-access": "~6.4.32",
         "symfony/process": "~6.4.33",
-        "guzzlehttp/guzzle": "7.10.0"
+        "guzzlehttp/guzzle": "7.10.0",
+        "deployer/deployer": "~7.5",
+        "hg/apidoc-export": "^1.0"
     },
     "suggest": {
         "ext-event": "For better performance. "
@@ -81,9 +83,6 @@
     },
     "minimum-stability": "dev",
     "prefer-stable": true,
-    "require-dev": {
-        "deployer/deployer": "^7.5"
-    },
     "config": {
         "audit": {
             "block-insecure": false
