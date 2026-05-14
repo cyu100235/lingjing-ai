@@ -1,0 +1,252 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Dark theme - inspired by Seedance/animation tools */
+    --surface: 220 20% 8%;
+    --surface-elevated: 220 16% 12%;
+    --surface-overlay: 220 14% 16%;
+
+    /* Brand green accent */
+    --brand: 142 71% 45%;
+    --brand-light: 142 60% 55%;
+    --brand-glow: 142 80% 50%;
+
+    /* Content colors */
+    --content: 0 0% 95%;
+    --content-secondary: 220 10% 65%;
+    --content-tertiary: 220 8% 45%;
+
+    /* Borders */
+    --border: 220 12% 20%;
+    --border-subtle: 220 10% 15%;
+
+    /* Danger */
+    --danger: 0 72% 51%;
+
+    /* Gradients */
+    --gradient-brand: linear-gradient(135deg, hsl(142 71% 45%), hsl(160 60% 40%));
+    --gradient-surface: linear-gradient(180deg, hsl(220 20% 10%), hsl(220 20% 6%));
+    --gradient-card: linear-gradient(145deg, hsl(220 16% 14%), hsl(220 16% 10%));
+
+    /* Shadows */
+    --shadow-sm: 0 2px 8px hsl(0 0% 0% / 0.2);
+    --shadow-md: 0 4px 16px hsl(0 0% 0% / 0.3);
+    --shadow-lg: 0 8px 32px hsl(0 0% 0% / 0.4);
+    --shadow-brand: 0 4px 20px hsl(142 80% 50% / 0.2);
+
+    /* Transitions */
+    --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-smooth: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-spring: 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+    /* Spacing scale */
+    --space-xs: 0.25rem;
+    --space-sm: 0.5rem;
+    --space-md: 1rem;
+    --space-lg: 1.5rem;
+    --space-xl: 2rem;
+    --space-2xl: 3rem;
+    --space-3xl: 4rem;
+
+    /* Border radius */
+    --radius-sm: 0.375rem;
+    --radius-md: 0.5rem;
+    --radius-lg: 0.75rem;
+    --radius-xl: 1rem;
+
+    /* Sidebar */
+    --sidebar-width: 64px;
+    --sidebar-expanded: 200px;
+  }
+}
+
+@layer base {
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+    background: hsl(var(--surface));
+    color: hsl(var(--content));
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow: hidden;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--content-tertiary) / 0.3);
+    border-radius: 3px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--content-tertiary) / 0.5);
+  }
+}
+
+@layer components {
+  /* Card styles */
+  .card-base {
+    @apply rounded-xl border border-border bg-surface-elevated;
+    transition: var(--transition-smooth);
+  }
+
+  .card-base:hover {
+    @apply border-brand/30 shadow-card-hover;
+    transform: translateY(-2px);
+  }
+
+  /* Button styles */
+  .btn-primary {
+    @apply px-4 py-2 rounded-lg font-medium text-sm cursor-pointer;
+    background: var(--gradient-brand);
+    color: hsl(0 0% 100%);
+    transition: var(--transition-smooth);
+    box-shadow: var(--shadow-brand);
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 24px hsl(142 80% 50% / 0.3);
+  }
+
+  .btn-secondary {
+    @apply px-4 py-2 rounded-lg font-medium text-sm border border-border bg-surface-elevated text-content-secondary;
+    transition: var(--transition-smooth);
+  }
+
+  .btn-secondary:hover {
+    @apply border-brand/40 text-content;
+    background: hsl(var(--surface-overlay));
+  }
+
+  .btn-ghost {
+    @apply px-3 py-2 rounded-lg font-medium text-sm text-content-secondary;
+    transition: var(--transition-smooth);
+  }
+
+  .btn-ghost:hover {
+    @apply text-content;
+    background: hsl(var(--surface-overlay));
+  }
+
+  /* Nav item */
+  .nav-item {
+    @apply flex items-center gap-3 px-3 py-2.5 rounded-lg text-content-secondary cursor-pointer;
+    transition: var(--transition-smooth);
+  }
+
+  .nav-item:hover {
+    @apply text-content;
+    background: hsl(var(--surface-overlay));
+  }
+
+  .nav-item.active {
+    @apply text-brand;
+    background: hsl(var(--brand) / 0.1);
+  }
+
+  /* Input */
+  .input-base {
+    @apply w-full px-3 py-2 rounded-lg border border-border bg-surface text-content text-sm;
+    transition: var(--transition-smooth);
+  }
+
+  .input-base:focus {
+    @apply outline-none border-brand/50;
+    box-shadow: 0 0 0 3px hsl(var(--brand) / 0.1);
+  }
+
+  .input-base::placeholder {
+    @apply text-content-tertiary;
+  }
+
+  .input-base[type="number"]::-webkit-inner-spin-button,
+  .input-base[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  .input-base[type="number"] {
+    -moz-appearance: textfield;
+  }
+
+  /* Badge */
+  .badge {
+    @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  .badge-brand {
+    @apply badge;
+    background: hsl(219deg 100% 50% / 60%);
+    color: #ffffff;
+  }
+
+  .badge-danger {
+    @apply badge;
+    background: hsl(var(--danger) / 0.15);
+    color: hsl(var(--danger));
+  }
+
+  /* Modal overlay */
+  .modal-overlay {
+    @apply fixed inset-0 z-50 flex items-center justify-center;
+    background: hsl(0 0% 0% / 0.6);
+    backdrop-filter: blur(4px);
+    animation: fadeIn 0.2s ease-out;
+  }
+
+  .modal-content {
+    @apply rounded-2xl border border-border bg-surface-elevated p-6;
+    box-shadow: var(--shadow-lg);
+    animation: scaleIn 0.2s ease-out;
+  }
+
+  /* Tooltip */
+  .tooltip {
+    @apply absolute z-50 px-2 py-1 rounded text-xs;
+    background: hsl(var(--surface-overlay));
+    color: hsl(var(--content));
+    box-shadow: var(--shadow-md);
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    background: var(--gradient-brand);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .glass {
+    background: hsl(var(--surface-elevated) / 0.8);
+    backdrop-filter: blur(12px);
+  }
+}
+
+/* Vue transition: fade */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
