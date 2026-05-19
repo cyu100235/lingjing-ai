@@ -4,9 +4,9 @@ return [
     'enable' => true,
     'jwt' => [
         'algorithms' => 'HS256',
-        'access_secret_key' => '2026hQskNKCJAPXm@xbcode#ce5660f9666a880a03ba547edfa29712',
+        'access_secret_key' => '2026AaSYCNGIZDvP@xbcode#345c78e40055b8c4264caa365afb708f',
         'access_exp' => 7200,
-        'refresh_secret_key' => '2026CjvyASGYtrHN@xbcode#b4a3d0b8dba667e8e8da5b5f7942ce00',
+        'refresh_secret_key' => '2026LvanQukPtNul@xbcode#2a8d2927841eddf8e62209d0fc1c7272',
         'refresh_exp' => 604800,
         'refresh_disable' => false,
         'iss' => 'webman.tinywan.cn',

@@ -5,6 +5,7 @@ import { useWorksStore, type AspectRatio } from '@/stores/projects'
 import WorksCard from './components/WorksCard.vue'
 import WorksFormModal from './components/WorksFormModal.vue'
 import WorksHeader from './components/WorksHeader.vue'
+import CreationCards from './components/CreationCards.vue'
 
 const router = useRouter()
 const store = useWorksStore()
@@ -12,6 +13,7 @@ const store = useWorksStore()
 const showCreateModal = ref(false)
 const showDeleteModal = ref(false)
 const showEditModal = ref(false)
+const showComingSoonModal = ref(false)
 const worksToDelete = ref<string | null>(null)
 const worksToEdit = ref<string | null>(null)
 const editFormData = ref<{ title: string; cover: string; aspectRatio: AspectRatio }>({
@@ -90,10 +92,17 @@ function saveWorks(payload: { title: string; cover: string; aspectRatio: AspectR
 function openEpisodes(id: string) {
   router.push(`/works/${id}/episodes`)
 }
+
+function showComingSoon() {
+  showComingSoonModal.value = true
+}
 </script>
 
 <template>
   <div class="animate-fade-in">
+    <!-- Creation Cards -->
+    <CreationCards @create="showComingSoon" />
+
     <!-- Header -->
     <WorksHeader
       :total="filteredWorks.length"
@@ -153,6 +162,15 @@ function openEpisodes(id: string) {
       confirm-type="danger"
       message="确定要删除这个作品吗？此操作不可撤销。"
       @confirm="deleteWorks"
+    />
+
+    <!-- Coming Soon Modal -->
+    <XbConfirmModal
+      v-model:visible="showComingSoonModal"
+      title="提示"
+      confirm-text="知道了"
+      :show-cancel="false"
+      message="该功能即将上线，敬请期待！"
     />
   </div>
 </template>

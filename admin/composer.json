@@ -57,7 +57,8 @@
         "symfony/process": "~6.4.33",
         "guzzlehttp/guzzle": "7.10.0",
         "deployer/deployer": "~7.5",
-        "hg/apidoc-export": "^1.0"
+        "hg/apidoc-export": "^1.0",
+        "michelf/php-markdown": "^2.0"
     },
     "suggest": {
         "ext-event": "For better performance. "

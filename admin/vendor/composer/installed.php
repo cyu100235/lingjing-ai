@@ -6,7 +6,7 @@
     'aliases' => 
     array (
     ),
-    'reference' => 'de8c4a71a6a0050ebf4a284b36b90487926036d1',
+    'reference' => '9999ef21c8dd496b87c2f62d4778257a8b190c44',
     'name' => 'xbcode/xbcode',
   ),
   'versions' => 
@@ -289,6 +289,15 @@
       array (
       ),
       'reference' => '870fc81d2f879903dfc5b60bf8a0f94a1609e669',
+    ),
+    'michelf/php-markdown' => 
+    array (
+      'pretty_version' => '2.0.0',
+      'version' => '2.0.0.0',
+      'aliases' => 
+      array (
+      ),
+      'reference' => 'eb176f173fbac58a045aff78e55f833264b34e71',
     ),
     'monolog/monolog' => 
     array (
@@ -1003,7 +1012,7 @@
       'aliases' => 
       array (
       ),
-      'reference' => 'de8c4a71a6a0050ebf4a284b36b90487926036d1',
+      'reference' => '9999ef21c8dd496b87c2f62d4778257a8b190c44',
     ),
   ),
 );

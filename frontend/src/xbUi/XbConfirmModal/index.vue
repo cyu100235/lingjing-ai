@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import XbButton from '../XbButton/index.vue'
+import XbModal from '../XbModal/index.vue'
+import type { ModalAnimation } from '../XbModal/index.vue'
 
 const props = withDefaults(defineProps<{
   visible: boolean
@@ -10,6 +12,9 @@ const props = withDefaults(defineProps<{
   confirmType?: 'primary' | 'danger'
   loading?: boolean
   width?: string
+  showCancel?: boolean
+  showConfirm?: boolean
+  animation?: ModalAnimation
 }>(), {
   title: '提示',
   message: '',
@@ -18,6 +23,9 @@ const props = withDefaults(defineProps<{
   confirmType: 'primary',
   loading: false,
   width: 'w-80',
+  showCancel: true,
+  showConfirm: true,
+  animation: undefined,
 })
 
 const emit = defineEmits<{
@@ -37,74 +45,50 @@ function handleConfirm() {
     emit('update:visible', false)
   }
 }
+
+function handleClose() {
+  emit('update:visible', false)
+  emit('cancel')
+}
 </script>
 
 <template>
-  <Teleport to="body">
-    <div v-if="visible" class="xb-confirm-overlay" @click.self="handleCancel">
-      <div class="xb-confirm-content" :class="width">
-        <!-- Header -->
-        <div v-if="title || $slots.header" class="flex items-start justify-between mb-3">
-          <slot name="header">
-            <h3 class="text-base font-semibold text-content">{{ title }}</h3>
-          </slot>
-        </div>
+  <XbModal
+    :visible="visible"
+    :title="title"
+    :width="width"
+    :show-close="false"
+    :close-on-overlay="true"
+    :animation="animation"
+    @update:visible="$emit('update:visible', $event)"
+    @close="handleClose"
+  >
+    <!-- Body -->
+    <slot>
+      <p class="text-sm text-content-secondary">{{ message }}</p>
+    </slot>
 
-        <!-- Body -->
-        <div class="mb-5">
-          <slot>
-            <p class="text-sm text-content-secondary">{{ message }}</p>
-          </slot>
-        </div>
-
-        <!-- Footer -->
-        <div class="flex justify-end gap-2">
-          <XbButton type="secondary" size="sm" @click="handleCancel">
-            {{ cancelText }}
-          </XbButton>
-          <XbButton
-            :type="confirmType === 'danger' ? 'danger' : 'primary'"
-            size="sm"
-            :loading="loading"
-            @click="handleConfirm"
-          >
-            {{ confirmText }}
-          </XbButton>
-        </div>
+    <!-- Footer -->
+    <template #footer>
+      <div class="flex justify-end gap-2">
+        <XbButton
+          v-if="showCancel"
+          type="secondary"
+          size="sm"
+          @click="handleCancel"
+        >
+          {{ cancelText }}
+        </XbButton>
+        <XbButton
+          v-if="showConfirm"
+          :type="confirmType === 'danger' ? 'danger' : 'primary'"
+          size="sm"
+          :loading="loading"
+          @click="handleConfirm"
+        >
+          {{ confirmText }}
+        </XbButton>
       </div>
-    </div>
-  </Teleport>
+    </template>
+  </XbModal>
 </template>
-
-<style scoped>
-.xb-confirm-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 50;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: hsl(0 0% 0% / 0.6);
-  backdrop-filter: blur(4px);
-  animation: fadeIn 0.2s ease-out;
-}
-
-.xb-confirm-content {
-  border-radius: 1rem;
-  border: 1px solid hsl(var(--border));
-  background: hsl(var(--surface-elevated));
-  padding: 1.5rem;
-  box-shadow: var(--shadow-lg);
-  animation: scaleIn 0.2s ease-out;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes scaleIn {
-  from { opacity: 0; transform: scale(0.95); }
-  to { opacity: 1; transform: scale(1); }
-}
-</style>
