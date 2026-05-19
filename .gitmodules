@@ -31,3 +31,9 @@
 [submodule "admin/plugin/xbUserWork"]
 	path = admin/plugin/xbUserWork
 	url = git@gitee.com:xbcode-plugin/xbUserWork.git
+[submodule "admin/plugin/xbCdKey"]
+	path = admin/plugin/xbCdKey
+	url = git@gitee.com:xbcode-plugin/xbCdKey.git
+[submodule "admin/plugin/xbSms"]
+	path = admin/plugin/xbSms
+	url = git@gitee.com:xbcode-plugin/xbSms.git
