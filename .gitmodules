@@ -37,3 +37,12 @@
 [submodule "plugin/xbUserWork"]
 	path = plugin/xbUserWork
 	url = git@gitee.com:xbcode-plugin/xbUserWork.git
+[submodule "plugin/xbSmsTencent"]
+	path = plugin/xbSmsTencent
+	url = git@gitee.com:xbcode-plugin/xbSmsTencent.git
+[submodule "plugin/xbSmsBao"]
+	path = plugin/xbSmsBao
+	url = git@gitee.com:xbcode-plugin/xbSmsBao.git
+[submodule "plugin/xbSmsAliyun"]
+	path = plugin/xbSmsAliyun
+	url = git@gitee.com:xbcode-plugin/xbSmsAliyun.git
