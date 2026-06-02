@@ -58,7 +58,9 @@
         "guzzlehttp/guzzle": "7.10.0",
         "deployer/deployer": "~7.5",
         "hg/apidoc-export": "^1.0",
-        "michelf/php-markdown": "^2.0"
+        "michelf/php-markdown": "^2.0",
+        "tencentcloud/sms": "^3.0",
+        "alibabacloud/client": "^1.5"
     },
     "suggest": {
         "ext-event": "For better performance. "
