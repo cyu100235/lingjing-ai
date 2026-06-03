@@ -46,3 +46,27 @@
 [submodule "plugin/xbSmsAliyun"]
 	path = plugin/xbSmsAliyun
 	url = git@gitee.com:xbcode-plugin/xbSmsAliyun.git
+[submodule "plugin/xbUploadCos"]
+	path = plugin/xbUploadCos
+	url = git@gitee.com:xbcode-plugin/xbUploadCos.git
+[submodule "plugin/xbUploadOss"]
+	path = plugin/xbUploadOss
+	url = git@gitee.com:xbcode-plugin/xbUploadOss.git
+[submodule "plugin/xbUploadQiniu"]
+	path = plugin/xbUploadQiniu
+	url = git@gitee.com:xbcode-plugin/xbUploadQiniu.git
+[submodule "plugin/xbAiModelAgent"]
+	path = plugin/xbAiModelAgent
+	url = git@gitee.com:xbcode-plugin/xbAiModelAgent.git
+[submodule "plugin/xbEmail"]
+	path = plugin/xbEmail
+	url = git@gitee.com:xbcode-plugin/xbEmail.git
+[submodule "plugin/xbMailqq"]
+	path = plugin/xbMailqq
+	url = git@gitee.com:xbcode-plugin/xbMailqq.git
+[submodule "plugin/xbWebMessage"]
+	path = plugin/xbWebMessage
+	url = git@gitee.com:xbcode-plugin/xbWebMessage.git
+[submodule "plugin/xbHelp"]
+	path = plugin/xbHelp
+	url = git@gitee.com:xbcode-plugin/xbHelp.git
