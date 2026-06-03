@@ -60,7 +60,11 @@
         "hg/apidoc-export": "^1.0",
         "michelf/php-markdown": "^2.0",
         "tencentcloud/sms": "^3.0",
-        "alibabacloud/client": "^1.5"
+        "alibabacloud/client": "^1.5",
+        "qcloud/cos-sdk-v5": "^2.6",
+        "aliyuncs/oss-sdk-php": "^2.7",
+        "qiniu/php-sdk": "^7.14",
+        "phpmailer/phpmailer": "^7.1"
     },
     "suggest": {
         "ext-event": "For better performance. "

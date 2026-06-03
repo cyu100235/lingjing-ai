@@ -56,6 +56,13 @@ if ($timezone = config('app.default_timezone')) {
     date_default_timezone_set($timezone);
 }
 
+// 设置 Workerman 上传临时目录，避免 tempnam() 警告
+$uploadTmpDir = runtime_path() . '/tmp';
+if (!is_dir($uploadTmpDir)) {
+    mkdir($uploadTmpDir, 0777, true);
+}
+\Workerman\Protocols\Http::uploadTmpDir($uploadTmpDir);
+
 foreach (config('autoload.files', []) as $file) {
     include_once $file;
 }
