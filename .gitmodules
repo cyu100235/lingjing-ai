@@ -70,3 +70,9 @@
 [submodule "plugin/xbHelp"]
 	path = plugin/xbHelp
 	url = git@gitee.com:xbcode-plugin/xbHelp.git
+[submodule "plugin/xbAiAsset"]
+	path = plugin/xbAiAsset
+	url = git@gitee.com:xbcode-plugin/xbAiAsset.git
+[submodule "plugin/xbCoupon"]
+	path = plugin/xbCoupon
+	url = git@gitee.com:xbcode-plugin/xbCoupon.git
