@@ -1,0 +1,17 @@
+<svg width="180" height="180" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect width="180" height="180" fill="url(#paint0_linear_video_cover)"/>
+<rect x="0.5" y="0.5" width="179" height="179" stroke="black" stroke-opacity="0.1"/>
+<mask id="mask1_video_cover" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="50" y="50" width="80" height="80">
+<rect x="50" y="50" width="80" height="80" fill="#D9D9D9"/>
+</mask>
+<g mask="url(#mask1_video_cover)">
+<rect x="55" y="60" width="70" height="60" rx="10" stroke="#8196FF" stroke-width="8"/>
+<path d="M82 78 L82 102 L106 90 Z" fill="#8196FF" stroke="#8196FF" stroke-width="6" stroke-linejoin="round"/>
+</g>
+<defs>
+<linearGradient id="paint0_linear_video_cover" x1="90" y1="0" x2="90" y2="180" gradientUnits="userSpaceOnUse">
+<stop stop-color="#F2F6F9"/>
+<stop offset="1" stop-color="#FAF4F4"/>
+</linearGradient>
+</defs>
+</svg>
