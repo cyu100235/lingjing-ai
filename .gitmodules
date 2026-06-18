@@ -1,78 +1,72 @@
-[submodule "plugin/xbAiGateway"]
-	path = plugin/xbAiGateway
-	url = git@gitee.com:xbcode-plugin/xbAiGateway.git
-[submodule "plugin/xbCdKey"]
-	path = plugin/xbCdKey
-	url = git@gitee.com:xbcode-plugin/xbCdKey.git
-[submodule "plugin/xbCode"]
-	path = plugin/xbCode
+[submodule "server/plugin/xbCode"]
+	path = server/plugin/xbCode
 	url = git@gitee.com:xbcode-plugin/xbCode.git
-[submodule "plugin/xbCrontab"]
-	path = plugin/xbCrontab
-	url = git@gitee.com:xbcode-plugin/xbCrontab.git
-[submodule "plugin/xbDevDoc"]
-	path = plugin/xbDevDoc
-	url = git@gitee.com:xbcode-plugin/xbDevDoc.git
-[submodule "plugin/xbDeveloper"]
-	path = plugin/xbDeveloper
-	url = git@gitee.com:xbcode-plugin/xbDeveloper.git
-[submodule "plugin/xbMovieApp"]
-	path = plugin/xbMovieApp
-	url = git@gitee.com:xbcode-plugin/xbMovieApp.git
-[submodule "plugin/xbSms"]
-	path = plugin/xbSms
-	url = git@gitee.com:xbcode-plugin/xbSms.git
-[submodule "plugin/xbTaskQueue"]
-	path = plugin/xbTaskQueue
-	url = git@gitee.com:xbcode-plugin/xbTaskQueue.git
-[submodule "plugin/xbUpload"]
-	path = plugin/xbUpload
-	url = git@gitee.com:xbcode-plugin/xbUpload.git
-[submodule "plugin/xbUser"]
-	path = plugin/xbUser
-	url = git@gitee.com:xbcode-plugin/xbUser.git
-[submodule "plugin/xbUserPackage"]
-	path = plugin/xbUserPackage
-	url = git@gitee.com:xbcode-plugin/xbUserPackage.git
-[submodule "plugin/xbUserWork"]
-	path = plugin/xbUserWork
-	url = git@gitee.com:xbcode-plugin/xbUserWork.git
-[submodule "plugin/xbSmsTencent"]
-	path = plugin/xbSmsTencent
-	url = git@gitee.com:xbcode-plugin/xbSmsTencent.git
-[submodule "plugin/xbSmsBao"]
-	path = plugin/xbSmsBao
-	url = git@gitee.com:xbcode-plugin/xbSmsBao.git
-[submodule "plugin/xbSmsAliyun"]
-	path = plugin/xbSmsAliyun
-	url = git@gitee.com:xbcode-plugin/xbSmsAliyun.git
-[submodule "plugin/xbUploadCos"]
-	path = plugin/xbUploadCos
-	url = git@gitee.com:xbcode-plugin/xbUploadCos.git
-[submodule "plugin/xbUploadOss"]
-	path = plugin/xbUploadOss
-	url = git@gitee.com:xbcode-plugin/xbUploadOss.git
-[submodule "plugin/xbUploadQiniu"]
-	path = plugin/xbUploadQiniu
-	url = git@gitee.com:xbcode-plugin/xbUploadQiniu.git
-[submodule "plugin/xbAiModelAgent"]
-	path = plugin/xbAiModelAgent
-	url = git@gitee.com:xbcode-plugin/xbAiModelAgent.git
-[submodule "plugin/xbEmail"]
-	path = plugin/xbEmail
-	url = git@gitee.com:xbcode-plugin/xbEmail.git
-[submodule "plugin/xbMailqq"]
-	path = plugin/xbMailqq
-	url = git@gitee.com:xbcode-plugin/xbMailqq.git
-[submodule "plugin/xbWebMessage"]
-	path = plugin/xbWebMessage
-	url = git@gitee.com:xbcode-plugin/xbWebMessage.git
-[submodule "plugin/xbHelp"]
-	path = plugin/xbHelp
-	url = git@gitee.com:xbcode-plugin/xbHelp.git
-[submodule "plugin/xbAiAsset"]
-	path = plugin/xbAiAsset
+[submodule "server/plugin/xbAiAsset"]
+	path = server/plugin/xbAiAsset
 	url = git@gitee.com:xbcode-plugin/xbAiAsset.git
-[submodule "plugin/xbCoupon"]
-	path = plugin/xbCoupon
+[submodule "server/plugin/xbAiModelAgent"]
+	path = server/plugin/xbAiModelAgent
+	url = git@gitee.com:xbcode-plugin/xbAiModelAgent.git
+[submodule "server/plugin/xbCdKey"]
+	path = server/plugin/xbCdKey
+	url = git@gitee.com:xbcode-plugin/xbCdKey.git
+[submodule "server/plugin/xbCoupon"]
+	path = server/plugin/xbCoupon
 	url = git@gitee.com:xbcode-plugin/xbCoupon.git
+[submodule "server/plugin/xbCrontab"]
+	path = server/plugin/xbCrontab
+	url = git@gitee.com:xbcode-plugin/xbCrontab.git
+[submodule "server/plugin/xbDevDoc"]
+	path = server/plugin/xbDevDoc
+	url = git@gitee.com:xbcode-plugin/xbDevDoc.git
+[submodule "server/plugin/xbDeveloper"]
+	path = server/plugin/xbDeveloper
+	url = git@gitee.com:xbcode-plugin/xbDeveloper.git
+[submodule "server/plugin/xbEmail"]
+	path = server/plugin/xbEmail
+	url = git@gitee.com:xbcode-plugin/xbEmail.git
+[submodule "server/plugin/xbHelp"]
+	path = server/plugin/xbHelp
+	url = git@gitee.com:xbcode-plugin/xbHelp.git
+[submodule "server/plugin/xbMailqq"]
+	path = server/plugin/xbMailqq
+	url = git@gitee.com:xbcode-plugin/xbMailqq.git
+[submodule "server/plugin/xbMovieApp"]
+	path = server/plugin/xbMovieApp
+	url = git@gitee.com:xbcode-plugin/xbMovieApp.git
+[submodule "server/plugin/xbSms"]
+	path = server/plugin/xbSms
+	url = git@gitee.com:xbcode-plugin/xbSms.git
+[submodule "server/plugin/xbSmsAliyun"]
+	path = server/plugin/xbSmsAliyun
+	url = git@gitee.com:xbcode-plugin/xbSmsAliyun.git
+[submodule "server/plugin/xbSmsBao"]
+	path = server/plugin/xbSmsBao
+	url = git@gitee.com:xbcode-plugin/xbSmsBao.git
+[submodule "server/plugin/xbSmsTencent"]
+	path = server/plugin/xbSmsTencent
+	url = git@gitee.com:xbcode-plugin/xbSmsTencent.git
+[submodule "server/plugin/xbTaskQueue"]
+	path = server/plugin/xbTaskQueue
+	url = git@gitee.com:xbcode-plugin/xbTaskQueue.git
+[submodule "server/plugin/xbUpload"]
+	path = server/plugin/xbUpload
+	url = git@gitee.com:xbcode-plugin/xbUpload.git
+[submodule "server/plugin/xbUploadCos"]
+	path = server/plugin/xbUploadCos
+	url = git@gitee.com:xbcode-plugin/xbUploadCos.git
+[submodule "server/plugin/xbUploadOss"]
+	path = server/plugin/xbUploadOss
+	url = git@gitee.com:xbcode-plugin/xbUploadOss.git
+[submodule "server/plugin/xbUploadQiniu"]
+	path = server/plugin/xbUploadQiniu
+	url = git@gitee.com:xbcode-plugin/xbUploadQiniu.git
+[submodule "server/plugin/xbUser"]
+	path = server/plugin/xbUser
+	url = git@gitee.com:xbcode-plugin/xbUser.git
+[submodule "server/plugin/xbUserWork"]
+	path = server/plugin/xbUserWork
+	url = git@gitee.com:xbcode-plugin/xbUserWork.git
+[submodule "server/plugin/xbWebMessage"]
+	path = server/plugin/xbWebMessage
+	url = git@gitee.com:xbcode-plugin/xbWebMessage.git
