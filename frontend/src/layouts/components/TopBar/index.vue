@@ -1,24 +1,18 @@
 <script setup lang="ts">
 import { useRoute, useRouter } from 'vue-router'
 
-import VipModal from './VipModal/index.vue'
-import PayModal from './PayModal/index.vue'
 import RechargeModal from './RechargeModal/index.vue'
 import NotificationBell from './NotificationBell.vue'
 import UserProfileModal from './UserProfileModal/index.vue'
 import LoginModal from './LoginModal/index.vue'
 import { useUserStore } from '@/stores/user'
-import { MEMBERSHIP_CONFIG } from '@/stores/user'
 import { useMarketplaceStore } from '@/stores/marketplace'
 import { useSiteConfigStore } from '@/stores/siteConfig'
 import { XbMessage } from '@/xbUi'
 import { appEventBus } from '@/events'
-import type { VipPlan } from './VipModal/types'
-
 const route = useRoute()
 const router = useRouter()
 const userStore = useUserStore()
-const marketplaceStore = useMarketplaceStore()
 const siteConfigStore = useSiteConfigStore()
 
 /** 充值是否已关闭 */
@@ -37,7 +31,6 @@ function handleRechargeClick() {
   showRechargeModal.value = true
 }
 const userName = computed(() => userStore.isLoggedIn ? userStore.userInfo.nickname : '未登录')
-const showVipModal = ref(false)
 const showUserModal = ref(false)
 const showLoginModal = ref(false)
 const showRechargeModal = ref(false)
@@ -48,20 +41,6 @@ function onShowLogin() {
 }
 onMounted(() => appEventBus.onShowLogin(onShowLogin))
 onUnmounted(() => appEventBus.offShowLogin(onShowLogin))
-
-// 支付弹窗相关
-const showPayModal = ref(false)
-const selectedPlan = ref<VipPlan | null>(null)
-
-function openPayModal(plan: VipPlan) {
-  selectedPlan.value = plan
-  showPayModal.value = true
-}
-
-function handlePaySuccess() {
-  showPayModal.value = false
-  showVipModal.value = false
-}
 
 const pageTitle = computed(() => {
   const titles: Record<string, string> = {
@@ -88,14 +67,6 @@ const pageTitle = computed(() => {
         @click="router.push('/help')" title="新手帮助">
         <XbIcon name="help-circle" :size="18" />
         <span class="text-xs hidden sm:inline">新手帮助</span>
-      </button>
-
-      <!-- 开通会员 -->
-      <button
-        class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-amber-400 hover:bg-surface-overlay transition-colors cursor-pointer"
-        @click="userStore.isLoggedIn ? showVipModal = true : showLoginModal = true" title="开通会员">
-        <XbIcon name="crown" :size="18" />
-        <span class="text-xs font-medium hidden sm:inline">开通会员</span>
       </button>
 
       <!-- 货币余额 -->
@@ -133,27 +104,17 @@ const pageTitle = computed(() => {
           <span class="text-xs text-content-secondary max-w-[60px] truncate">
             {{ userName }}
           </span>
-          <span class="text-[10px] font-medium" :class="MEMBERSHIP_CONFIG[userStore.userInfo.level || 'free'].color">
-            {{ MEMBERSHIP_CONFIG[userStore.userInfo.level || 'free'].label }}
-          </span>
         </div>
         <span v-else class="text-xs text-content-secondary hidden sm:inline max-w-[60px] truncate">{{ userName }}</span>
       </div>
     </div>
   </header>
 
-  <!-- VIP Modal -->
-  <VipModal :visible="showVipModal" @close="showVipModal = false" @open-pay-modal="openPayModal" />
-
   <!-- User Profile Modal -->
   <UserProfileModal :visible="showUserModal" @close="showUserModal = false" />
 
   <!-- Login Modal -->
   <LoginModal :visible="showLoginModal" @close="showLoginModal = false" />
-
-  <!-- Payment Modal -->
-  <PayModal :visible="showPayModal" :selected-plan="selectedPlan" @close="showPayModal = false"
-    @pay-success="handlePaySuccess" />
 
   <!-- Recharge Modal -->
   <RechargeModal :visible="showRechargeModal" @close="showRechargeModal = false" />

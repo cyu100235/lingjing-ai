@@ -15,6 +15,7 @@ const props = withDefaults(defineProps<{
   showCancel?: boolean
   showConfirm?: boolean
   animation?: ModalAnimation
+  closeOnOverlay?: boolean
 }>(), {
   title: '提示',
   message: '',
@@ -26,6 +27,7 @@ const props = withDefaults(defineProps<{
   showCancel: true,
   showConfirm: true,
   animation: undefined,
+  closeOnOverlay: true,
 })
 
 const emit = defineEmits<{
@@ -60,7 +62,7 @@ function handleClose() {
     :title="title"
     :width="width"
     :show-close="false"
-    :close-on-overlay="true"
+    :close-on-overlay="closeOnOverlay"
     :animation="animation"
     :submit-on-enter="showConfirm && !loading"
     @update:visible="$emit('update:visible', $event)"

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 
 import { formatTime } from '@/utils/media'
+import ModelLogDetailInfo from '@/components/ModelLogDetailInfo/index.vue'
 
 export interface Episode {
   id: string
@@ -20,11 +21,20 @@ export interface VideoPlayerInfo {
   workId?: string
 }
 
+export interface VideoPlayerDetails {
+  modelName?: string
+  status?: string
+  type?: 'image' | 'video' | 'audio'
+  resolution?: string
+  saleAmount?: string
+}
+
 const props = defineProps<{
   visible: boolean
   media: VideoPlayerInfo | null
   showLike?: boolean
   prompt?: string
+  details?: VideoPlayerDetails
 }>()
 
 const emit = defineEmits<{
@@ -245,8 +255,16 @@ const likeDisplay = computed(() => {
         </div>
       </div>
 
-      <!-- Right: Prompt + Episode List -->
-      <div v-if="prompt || media!.episodes?.length" class="w-[25rem] border-l border-border bg-surface-elevated flex flex-col flex-shrink-0">
+      <!-- Right: Details + Prompt + Episode List -->
+      <div v-if="prompt || media!.episodes?.length || details" class="w-[25rem] border-l border-border bg-surface-elevated flex flex-col flex-shrink-0">
+        <ModelLogDetailInfo
+          v-if="details"
+          :model-name="details.modelName"
+          :status="details.status"
+          :type="details.type"
+          :resolution="details.resolution"
+          :sale-amount="details.saleAmount"
+        />
         <!-- Prompt -->
         <div v-if="prompt" class="flex-shrink-0 border-b border-border">
           <div class="px-4 py-3">

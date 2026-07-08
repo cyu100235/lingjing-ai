@@ -3,7 +3,11 @@ import AudioPlayerModal from '@/components/AudioPlayerModal/index.vue'
 import type { AudioPlayerInfo } from '@/components/AudioPlayerModal/index.vue'
 import VideoPlayerModal from '@/components/VideoPlayerModal/index.vue'
 import type { VideoPlayerInfo } from '@/components/VideoPlayerModal/index.vue'
+import ModelLogDetailInfo from '@/components/ModelLogDetailInfo/index.vue'
 import { getVideoFirstFrame } from '@/utils/media'
+import { getAssetTypeList, type AssetTypeItem } from '@/api/assetsType'
+import { createAsset, type AssetType } from '@/api/assets'
+import { XbMessage } from '@/xbUi'
 
 type MainTab = 'image' | 'video' | 'audio'
 
@@ -13,11 +17,17 @@ export type ResultItem = {
   id: string
   type: MainTab
   thumbnail: string
+  /** 压缩后的缩略图（base64 或原 URL），用于列表展示，优先级高于 thumbnail */
+  thumbnailCompressed?: string
   mediaUrl: string
   prompt: string
   status?: string
   createAt?: string
   modelName?: string
+  /** 分辨率，如 1024x1024 */
+  resolution?: string
+  /** 实际消费金额格式化文本 */
+  saleAmount?: string
 }
 
 const props = defineProps<{
@@ -94,6 +104,108 @@ function handleBatchDelete() {
   confirmVisible.value = true
 }
 
+// ===================== 加入资产库弹窗 =====================
+const addToAssetsVisible = ref(false)
+const assetTypeOptions = ref<AssetTypeItem[]>([])
+const assetTypeLoading = ref(false)
+const addToAssetsLoading = ref(false)
+
+/** 当前待加入的有效项（成功且有媒体地址） */
+const pendingAddItems = ref<ResultItem[]>([])
+
+/**
+ * 按媒体类型分组的资产类型选项：
+ * image -> type==='image' 的后端类型
+ * audio -> type==='audio' 的后端类型
+ * video -> type==='video' 的后端类型
+ */
+const groupedTypeOptions = computed(() => {
+  const mediaTypes = [...new Set(pendingAddItems.value.map(r => r.type))]
+  return mediaTypes.map(mt => ({
+    mediaType: mt,
+    label: TYPE_LABELS[mt],
+    options: assetTypeOptions.value.filter(o => o.type === mt),
+  }))
+})
+
+/** 用户为每种媒体类型选择的目标资产类型值，key 为 mediaType */
+const selectedAssetType = ref<Record<string, AssetType>>({})
+
+/** 是否所有媒体类型都已选择 */
+const allTypeSelected = computed(() =>
+  groupedTypeOptions.value.every(g => !!selectedAssetType.value[g.mediaType])
+)
+
+/** 批量加入资产库：打开类型选择弹窗 */
+async function handleBatchAddToAssets() {
+  const ids = [...selectedIds.value]
+  if (!ids.length) return
+  const items = props.results.filter(r => ids.includes(r.id))
+  const validItems = items.filter(
+    r => (r.status === 'success' || r.status === 'completed') && r.mediaUrl
+  )
+  if (!validItems.length) {
+    XbMessage.warning('选中的记录中没有可加入的资产（仅支持已成功生成的记录）')
+    return
+  }
+  pendingAddItems.value = validItems
+  selectedAssetType.value = {}
+  // 拉取资产类型列表
+  assetTypeLoading.value = true
+  try {
+    assetTypeOptions.value = await getAssetTypeList()
+    // 自动预选每种媒体类型的第一个可用选项
+    const mediaTypes = [...new Set(validItems.map(r => r.type))]
+    mediaTypes.forEach(mt => {
+      const first = assetTypeOptions.value.find(o => o.type === mt)
+      if (first) selectedAssetType.value[mt] = first.value as AssetType
+    })
+  } catch {
+    XbMessage.error('获取资产类型失败，请稍候重试')
+    assetTypeLoading.value = false
+    return
+  }
+  assetTypeLoading.value = false
+  addToAssetsVisible.value = true
+}
+
+/** 确认加入资产库 */
+async function confirmAddToAssets() {
+  if (!allTypeSelected.value) return
+  addToAssetsLoading.value = true
+  let successCount = 0
+  let failCount = 0
+  await Promise.allSettled(
+    pendingAddItems.value.map(async (item) => {
+      const assetType = selectedAssetType.value[item.type]
+      const assetTypeLabel = assetTypeOptions.value.find(o => o.value === assetType)?.label || item.type
+      const randomSuffix = Math.random().toString(36).slice(2, 8).toUpperCase()
+      const assetName = `${assetTypeLabel}-${randomSuffix}`
+      try {
+        await createAsset({
+          name: assetName,
+          type: assetType,
+          source: '20',
+          media_url: item.mediaUrl,
+          thumb: item.thumbnail || undefined,
+        })
+        successCount++
+      } catch {
+        failCount++
+      }
+    })
+  )
+  addToAssetsLoading.value = false
+  addToAssetsVisible.value = false
+  if (successCount > 0 && failCount === 0) {
+    XbMessage.success(`已成功加入 ${successCount} 个资产`)
+  } else if (successCount > 0 && failCount > 0) {
+    XbMessage.warning(`成功加入 ${successCount} 个，${failCount} 个失败`)
+  } else {
+    XbMessage.error('加入资产库失败，请稍候重试')
+  }
+}
+
 /** 确认删除 */
 function onConfirmDelete() {
   if (pendingDeleteId.value) {
@@ -111,7 +223,6 @@ const RESULT_FILTERS = [
   { label: '全部', value: 'all' as const },
   { label: '视频', value: 'video' as const },
   { label: '图片', value: 'image' as const },
-  { label: '音频', value: 'audio' as const },
 ]
 
 // ===================== 视频第一帧封面缓存 =====================
@@ -126,7 +237,8 @@ function getThumbnail(item: ResultItem): string {
     if (cached) return cached
     if (item.thumbnail) return item.thumbnail
   }
-  return item.thumbnail
+  // 图片类型优先使用压缩后的缩略图
+  return item.thumbnailCompressed || item.thumbnail
 }
 
 // 监听 results 变化，为缺少封面的视频项提取第一帧
@@ -153,12 +265,109 @@ const previewImageSrc = ref('')
 const previewPrompt = ref('')
 const previewAudioMedia = ref<AudioPlayerInfo | null>(null)
 const previewVideoMedia = ref<VideoPlayerInfo | null>(null)
+const previewItem = ref<ResultItem | null>(null)
+
+const previewDetails = computed(() => {
+  if (!previewItem.value) return undefined
+  return {
+    modelName: previewItem.value.modelName,
+    status: previewItem.value.status,
+    type: previewItem.value.type,
+    resolution: previewItem.value.resolution,
+    saleAmount: previewItem.value.saleAmount,
+  }
+})
+
+// ===================== 图片预览缩放与全屏 =====================
+const imagePreviewContainerRef = ref<HTMLDivElement | null>(null)
+const imageScale = ref(1)
+const imageOffset = ref({ x: 0, y: 0 })
+const isDragging = ref(false)
+const dragStart = ref({ x: 0, y: 0 })
+const dragMoved = ref(false)
+const DRAG_THRESHOLD = 5
+
+/** 鼠标滚轮缩放（仅全屏模式下可用） */
+function onImageWheel(e: WheelEvent) {
+  e.preventDefault()
+  if (document.fullscreenElement !== imagePreviewContainerRef.value) return
+  const step = e.deltaY > 0 ? -0.15 : 0.15
+  imageScale.value = Math.min(Math.max(imageScale.value + step, 0.5), 5)
+}
+
+/** 按下左键开始拖动 */
+function onImageMouseDown(e: MouseEvent) {
+  e.preventDefault()
+  isDragging.value = true
+  dragMoved.value = false
+  dragStart.value = {
+    x: e.clientX - imageOffset.value.x,
+    y: e.clientY - imageOffset.value.y,
+  }
+}
+
+/** 拖动中更新偏移 */
+function onImageMouseMove(e: MouseEvent) {
+  if (!isDragging.value) return
+  const newX = e.clientX - dragStart.value.x
+  const newY = e.clientY - dragStart.value.y
+  if (
+    Math.abs(newX - imageOffset.value.x) > DRAG_THRESHOLD ||
+    Math.abs(newY - imageOffset.value.y) > DRAG_THRESHOLD
+  ) {
+    dragMoved.value = true
+  }
+  imageOffset.value = { x: newX, y: newY }
+}
+
+/** 释放左键结束拖动 */
+function onImageMouseUp() {
+  isDragging.value = false
+}
+
+/** 点击图片切换全屏（拖动时不触发） */
+function toggleImageFullscreen() {
+  if (dragMoved.value) {
+    dragMoved.value = false
+    return
+  }
+  const el = imagePreviewContainerRef.value
+  if (!el) return
+  if (document.fullscreenElement === el) {
+    document.exitFullscreen()
+  } else {
+    el.requestFullscreen()
+  }
+}
+
+/** 退出全屏时重置缩放与偏移 */
+function onFullscreenChange() {
+  if (document.fullscreenElement !== imagePreviewContainerRef.value) {
+    imageScale.value = 1
+    imageOffset.value = { x: 0, y: 0 }
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('fullscreenchange', onFullscreenChange)
+  document.addEventListener('mousemove', onImageMouseMove)
+  document.addEventListener('mouseup', onImageMouseUp)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('fullscreenchange', onFullscreenChange)
+  document.removeEventListener('mousemove', onImageMouseMove)
+  document.removeEventListener('mouseup', onImageMouseUp)
+})
 
 function openPreview(item: ResultItem) {
   // 只有成功状态才可预览
   if (item.status !== 'success' && item.status !== 'completed') return
+  previewItem.value = item
   previewPrompt.value = item.prompt || ''
   if (item.type === 'image') {
+    imageScale.value = 1
+    imageOffset.value = { x: 0, y: 0 }
     previewImageSrc.value = item.mediaUrl || item.thumbnail
     previewVisible.value = true
   } else if (item.type === 'audio') {
@@ -184,6 +393,12 @@ function closePreview() {
   previewPrompt.value = ''
   previewAudioMedia.value = null
   previewVideoMedia.value = null
+  previewItem.value = null
+  imageScale.value = 1
+  imageOffset.value = { x: 0, y: 0 }
+  if (document.fullscreenElement === imagePreviewContainerRef.value) {
+    document.exitFullscreen()
+  }
 }
 
 function statusClass(status?: string) {
@@ -232,6 +447,14 @@ function statusText(status?: string) {
         </XbButton>
         <XbButton
           size="sm"
+          type="primary"
+          :disabled="selectedIds.size === 0"
+          @click="handleBatchAddToAssets"
+        >
+          加入我的资产
+        </XbButton>
+        <XbButton
+          size="sm"
           type="danger"
           :disabled="selectedIds.size === 0"
           @click="handleBatchDelete"
@@ -260,7 +483,7 @@ function statusText(status?: string) {
     </div>
 
     <!-- 生成结果网格 -->
-    <div v-else class="w-full px-5 py-2 grid gap-4" style="grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));">
+    <div v-else class="w-full px-5 py-2 grid gap-4" style="grid-template-columns: repeat(5, 1fr);">
       <div
         v-for="item in results"
         :key="item.id"
@@ -322,6 +545,15 @@ function statusText(status?: string) {
               </span>
             </div>
           </div>
+          <!-- 分辨率与实际消费 -->
+          <div class="flex items-center justify-between mt-1.5">
+            <span class="text-[10px] text-content-tertiary" :title="item.resolution">
+              {{ item.resolution || '—' }}
+            </span>
+            <span class="text-[10px] px-1.5 py-0.5 rounded-md bg-green-500/10 text-green-500 font-medium">
+              {{ item.saleAmount || '—' }}
+            </span>
+          </div>
         </div>
       </div>
     </div>
@@ -345,15 +577,35 @@ function statusText(status?: string) {
     @close="closePreview"
   >
     <div class="flex h-[70vh]">
-      <div class="flex-1 min-h-0 flex items-center justify-center overflow-hidden bg-black">
-        <img :src="previewImageSrc" class="max-w-full max-h-full object-contain" />
+      <div
+        ref="imagePreviewContainerRef"
+        class="flex-1 min-h-0 flex items-center justify-center overflow-hidden bg-black"
+        @wheel.prevent="onImageWheel"
+      >
+        <img
+          :src="previewImageSrc"
+          class="max-w-full max-h-full object-contain select-none"
+          :class="isDragging ? 'cursor-grabbing transition-none' : 'cursor-grab transition-transform duration-200'"
+          :style="{ transform: `translate(${imageOffset.x}px, ${imageOffset.y}px) scale(${imageScale})` }"
+          draggable="false"
+          @mousedown.prevent="onImageMouseDown"
+          @click.stop="toggleImageFullscreen"
+        />
       </div>
-      <div v-if="previewPrompt" class="w-[25rem] shrink-0 border-l border-border bg-surface-elevated flex flex-col">
-        <div class="px-4 py-3 border-b border-border flex-shrink-0">
-          <h4 class="text-sm font-medium text-content">提示词</h4>
-        </div>
-        <div class="flex-1 overflow-y-auto px-4 py-3">
-          <p class="text-xs text-content-secondary leading-relaxed whitespace-pre-wrap break-words">{{ previewPrompt.replace(/\\n/g, '\n') }}</p>
+      <div v-if="previewPrompt || previewItem" class="w-[25rem] shrink-0 border-l border-border bg-surface-elevated flex flex-col">
+        <ModelLogDetailInfo
+          v-if="previewItem"
+          :model-name="previewItem.modelName"
+          :status="previewItem.status"
+          :type="previewItem.type"
+          :resolution="previewItem.resolution"
+          :sale-amount="previewItem.saleAmount"
+        />
+        <div v-if="previewPrompt" class="flex-1 overflow-y-auto px-4 py-3">
+          <h4 class="text-sm font-medium text-content mb-2">提示词</h4>
+          <p class="text-xs text-content-secondary leading-relaxed whitespace-pre-wrap break-words">
+            {{ previewPrompt.replace(/\\n/g, '\n') }}
+          </p>
         </div>
       </div>
     </div>
@@ -364,6 +616,7 @@ function statusText(status?: string) {
     :visible="previewVisible && !!previewAudioMedia"
     :media="previewAudioMedia"
     :prompt="previewPrompt"
+    :details="previewDetails"
     @close="closePreview"
   />
 
@@ -372,6 +625,7 @@ function statusText(status?: string) {
     :visible="previewVisible && !!previewVideoMedia"
     :media="previewVideoMedia"
     :prompt="previewPrompt"
+    :details="previewDetails"
     :show-like="false"
     @close="closePreview"
   />
@@ -385,4 +639,64 @@ function statusText(status?: string) {
     confirm-type="danger"
     @confirm="onConfirmDelete"
   />
+
+  <!-- 加入资产库 - 类型选择弹窗 -->
+  <XbModal
+    :visible="addToAssetsVisible"
+    title="选择资产类型"
+    width="w-[30rem]"
+    @close="addToAssetsVisible = false"
+  >
+    <div class="space-y-5">
+      <p class="text-xs text-content-secondary">
+        共
+        <span class="font-medium text-content">
+          {{ pendingAddItems.length }}
+        </span>
+        条记录将加入资产库，请为每种媒体类型选择目标分类。
+      </p>
+
+      <div
+        v-for="group in groupedTypeOptions"
+        :key="group.mediaType"
+        class="space-y-2"
+      >
+        <label class="text-xs font-medium text-content-secondary">
+          {{ group.label }} 类型
+          <span class="text-red-400">*</span>
+        </label>
+        <div class="grid grid-cols-2 gap-2">
+          <button
+            v-for="opt in group.options"
+            :key="opt.value"
+            class="flex items-center gap-2 px-3 py-2 rounded-lg border text-xs transition-all duration-150"
+            :class="selectedAssetType[group.mediaType] === opt.value
+              ? 'border-brand bg-brand/10 text-brand'
+              : 'border-border text-content-secondary hover:border-brand/30'"
+            @click="selectedAssetType[group.mediaType] = opt.value as AssetType"
+          >
+            <XbIcon :name="opt.icon || 'layers'" :size="14" />
+            <span class="truncate">{{ opt.label }}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <template #footer>
+      <div class="flex justify-end gap-2">
+        <XbButton type="secondary" size="sm" @click="addToAssetsVisible = false">
+          取消
+        </XbButton>
+        <XbButton
+          type="primary"
+          size="sm"
+          :disabled="!allTypeSelected"
+          :loading="addToAssetsLoading"
+          @click="confirmAddToAssets"
+        >
+          确认加入
+        </XbButton>
+      </div>
+    </template>
+  </XbModal>
 </template>

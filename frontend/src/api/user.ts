@@ -38,8 +38,6 @@ export interface UserInfo {
   freeze_balance: number
   /** 用户积分 */
   integral: number
-  /** 会员等级（可选，前端扩展字段） */
-  level?: 'free' | 'monthly' | 'annual' | 'lifetime'
   [key: string]: unknown
 }
 
@@ -153,75 +151,75 @@ export interface CaptchaResult {
  * 用户注册
  */
 export const register = (params: RegisterParams): Promise<unknown> => {
-  return request.post<unknown>('/xbUser/api/Publics/register', params)
+  return request.post<unknown>('/app/xbUser/api/Publics/register', params)
 }
 
 /**
  * 用户登录
  */
 export const login = (params: LoginParams): Promise<LoginResult> => {
-  return request.post<LoginResult>('/xbUser/api/Publics/login', params)
+  return request.post<LoginResult>('/app/xbUser/api/Publics/login', params)
 }
 
 /**
  * 获取用户信息
  */
 export const getUserInfo = (): Promise<UserInfo> => {
-  return request.get<UserInfo>('/xbUser/api/User/info')
+  return request.get<UserInfo>('/app/xbUser/api/User/info')
 }
 
 /**
  * 修改个人资料（单字段）
  */
 export const editProfileField = (params: EditProfileFieldParams): Promise<unknown> => {
-  return request.put<unknown>('/xbUser/api/User/profile', params)
+  return request.put<unknown>('/app/xbUser/api/User/profile', params)
 }
 
 /**
  * 修改资料（昵称/头像）
  */
 export const editProfile = (params: EditProfileParams): Promise<unknown> => {
-  return request.put<unknown>('/xbUser/api/User/editProfile', params)
+  return request.put<unknown>('/app/xbUser/api/User/editProfile', params)
 }
 
 /**
  * 修改登录密码
  */
 export const changePassword = (params: ChangePasswordParams): Promise<unknown> => {
-  return request.put<unknown>('/xbUser/api/User/password', params)
+  return request.put<unknown>('/app/xbUser/api/User/password', params)
 }
 
 /**
  * 找回密码（重置密码）
  */
 export const resetPassword = (params: ResetPasswordParams): Promise<unknown> => {
-  return request.put<unknown>('/xbUser/api/Publics/findPassword', params)
+  return request.put<unknown>('/app/xbUser/api/Publics/findPassword', params)
 }
 
 /**
  * 获取图像验证码
  */
 export const getCaptcha = (): Promise<CaptchaResult> => {
-  return request.get<CaptchaResult>('/xbUser/api/Publics/captcha')
+  return request.get<CaptchaResult>('/app/xbUser/api/Publics/captcha')
 }
 
 /**
  * 手机验证码登录
  */
 export const mobileLogin = (params: MobileLoginParams): Promise<LoginResult> => {
-  return request.post<LoginResult>('/xbUser/api/Publics/mobileLogin', params)
+  return request.post<LoginResult>('/app/xbUser/api/Publics/mobileLogin', params)
 }
 
 /**
  * 邮箱验证码登录
  */
 export const emailLogin = (params: EmailLoginParams): Promise<LoginResult> => {
-  return request.post<LoginResult>('/xbUser/api/Publics/emailLogin', params)
+  return request.post<LoginResult>('/app/xbUser/api/Publics/emailLogin', params)
 }
 
 /**
  * 退出登录
  */
 export const logout = (params: LogoutParams): Promise<unknown> => {
-  return request.delete<unknown>('/xbUser/api/Publics/logout', { data: params })
+  return request.delete<unknown>('/app/xbUser/api/Publics/logout', { data: params })
 }

@@ -3,6 +3,7 @@ import { useAssetStore, type Asset, type AssetType, type AssetSubType } from '@/
 import { isAudioAsset, isVideoAsset } from '@/utils/media'
 import { type CategoryFilterItem } from '@/config/assetTypes'
 import { getAssetTypeList } from '@/api/assetsType'
+import { getAssetList, deleteAsset as deleteAssetApi, updateAsset, type AssetItem, type AssetType as ApiAssetType } from '@/api/assets'
 import AssetsHeader from './components/AssetsHeader.vue'
 import AssetCategoryFilter from '@/components/AssetCategoryFilter/index.vue'
 import AssetToolbar from './components/AssetToolbar.vue'
@@ -26,33 +27,117 @@ const previewAsset = ref<Asset | null>(null)
 const allTags = ['主角', '配角', '古风', '武侠', '萌宠', '搞笑', '室内', '室外', '自然', '宏伟', '正面', '负面', '夸张', '可爱', '武器', '道具', '生活', '装饰', '节日']
 const searchInput = ref(store.searchQuery)
 
-/** 提交搜索关键词到 store */
+// ===================== API 类型映射 =====================
+const API_TO_FRONTEND_TYPE_MAP: Record<ApiAssetType, AssetType> = {
+  '10': 'background',
+  '20': 'character',
+  '30': 'prop',
+  '40': 'voice',
+  '50': 'sound_effect',
+  '60': 'video',
+}
+
+const FRONTEND_TO_API_TYPE_MAP: Record<AssetType, ApiAssetType | undefined> = {
+  'background': '10',
+  'character': '20',
+  'prop': '30',
+  'voice': '40',
+  'sound_effect': '50',
+  'video': '60',
+  'expression': undefined,
+  'action': undefined,
+  'effect': undefined,
+}
+
+/** 将 API 返回的资产项转换为前端 Asset 类型 */
+function transformAssetItem(item: AssetItem): Asset {
+  return {
+    id: String(item.id),
+    name: item.name,
+    type: API_TO_FRONTEND_TYPE_MAP[item.type as ApiAssetType] ?? 'character',
+    thumbnail: item.thumb || item.media_url,
+    mediaUrl: item.media_url,
+    duration: item.duration,
+    tags: item.tags ? item.tags.split(',').map(t => t.trim()).filter(Boolean) : [],
+    createdAt: item.create_at ? item.create_at.split(' ')[0] : '',
+  }
+}
+
+// ===================== 资产列表 API 状态 =====================
+const assets = ref<Asset[]>([])
+const loading = ref(false)
+const error = ref<string | null>(null)
+const pageSize = 20
+const currentPage = ref(1)
+const total = ref(0)
+const lastPage = ref(1)
+
+/** 获取资产列表 */
+async function fetchAssets() {
+  loading.value = true
+  error.value = null
+  try {
+    const params: Parameters<typeof getAssetList>[0] = {
+      page: currentPage.value,
+      limit: pageSize,
+    }
+    if (store.activeFilter !== 'all') {
+      const apiType = FRONTEND_TO_API_TYPE_MAP[store.activeFilter]
+      if (apiType) {
+        params.type = apiType
+      }
+    }
+    if (store.searchQuery) {
+      params.name = store.searchQuery
+    }
+    const res = await getAssetList(params)
+    assets.value = res.data.map(transformAssetItem)
+    total.value = res.total
+    lastPage.value = res.last_page
+  } catch (err: any) {
+    error.value = err.message || '获取资产列表失败，请稍后重试'
+    assets.value = []
+    total.value = 0
+    lastPage.value = 1
+  } finally {
+    loading.value = false
+  }
+}
+
+/** 提交搜索关键词并重新获取数据 */
 function handleSearch() {
   store.searchQuery = searchInput.value
+  currentPage.value = 1
+  fetchAssets()
 }
 
 /** 通过标签搜索，同步更新搜索框和 store */
 function handleSearchByTag(tag: string) {
   searchInput.value = tag
   store.searchQuery = tag
+  currentPage.value = 1
+  fetchAssets()
 }
 
 const typeFilters = shallowRef<CategoryFilterItem[]>([
-  { value: 'all', label: '全部', icon: 'grid', count: computed(() => store.assets.length) },
+  { value: 'all', label: '全部', icon: 'grid', count: computed(() => total.value) },
 ])
 
-/** 从接口获取资产类型列表，构建侧边栏筛选数据（含类型计数和子类型计数） */
+/** 从接口获取资产类型列表，构建侧边栏筛选数据 */
 async function fetchAssetTypeList() {
   try {
     const res = await getAssetTypeList()
     typeFilters.value = [
-      { value: 'all', label: '全部', icon: 'grid', count: computed(() => store.assets.length) },
-      ...res.map(item => ({
-        value: item.value as AssetType,
-        label: item.label,
-        icon: item.icon || 'grid',
-        count: computed(() => store.assets.filter(a => a.type === item.value).length),
-      })),
+      { value: 'all', label: '全部', icon: 'grid', count: computed(() => total.value) },
+      ...res.map(item => {
+        const frontendType = API_TO_FRONTEND_TYPE_MAP[item.value as ApiAssetType]
+        return {
+          value: (frontendType || item.value) as AssetType,
+          label: item.label,
+          icon: item.icon || 'grid',
+          count: computed(() => assets.value.filter(a => a.type === frontendType).length),
+        }
+      }),
     ]
   } catch (error) {
     console.error('获取资产类型列表失败', error)
@@ -64,26 +149,35 @@ function handleFilterSelect(type: AssetType | 'all', subType?: AssetSubType | 'a
   store.activeFilter = type
   store.activeSubFilter = subType || 'all'
   currentPage.value = 1
+  fetchAssets()
 }
 
-/** 根据筛选条件过滤后的资产列表 */
-const filteredAssets = computed(() => store.getFilteredAssets())
-
-const pageSize = 10
-const currentPage = ref(1)
-
-const totalPages = computed(() => Math.ceil(filteredAssets.value.length / pageSize))
-
-/** 当前分页的资产切片 */
-const paginatedAssets = computed(() => {
-  const start = (currentPage.value - 1) * pageSize
-  return filteredAssets.value.slice(start, start + pageSize)
+/** 根据筛选条件过滤后的资产列表（子类型和标签在前端补充过滤） */
+const filteredAssets = computed(() => {
+  let filtered = assets.value
+  if (store.activeSubFilter !== 'all') {
+    filtered = filtered.filter(a => a.subType === store.activeSubFilter)
+  }
+  if (store.searchQuery) {
+    const query = store.searchQuery.toLowerCase()
+    filtered = filtered.filter(a =>
+      a.name.toLowerCase().includes(query) ||
+      a.tags.some(t => t.toLowerCase().includes(query))
+    )
+  }
+  return filtered
 })
+
+const totalPages = computed(() => Math.max(1, lastPage.value))
+
+/** 当前页展示的资产列表（已做前端过滤） */
+const paginatedAssets = computed(() => filteredAssets.value)
 
 /** 跳转到指定页码 */
 function goToPage(page: number) {
-  if (page >= 1 && page <= totalPages.value) {
+  if (page >= 1 && page <= totalPages.value && page !== currentPage.value) {
     currentPage.value = page
+    fetchAssets()
   }
 }
 
@@ -102,14 +196,31 @@ function deleteSelected() {
   batchDeleteConfirmVisible.value = true
 }
 
-/** 确认批量删除，逐个删除选中资产并退出批量模式 */
-function confirmBatchDelete() {
-  selectedAssets.value.forEach(id => store.deleteAsset(id))
-  selectedAssets.value = []
-  batchMode.value = false
+/** 确认批量删除，调用 API 逐个删除并刷新列表 */
+async function confirmBatchDelete() {
+  try {
+    await Promise.allSettled(
+      selectedAssets.value.map(id => deleteAssetApi(Number(id)))
+    )
+    selectedAssets.value = []
+    batchMode.value = false
+    await fetchAssets()
+  } catch (err) {
+    console.error('批量删除失败', err)
+  }
 }
 
 const batchDeleteConfirmVisible = ref(false)
+
+/** 单个删除处理 */
+async function handleDeleteAsset(id: string) {
+  try {
+    await deleteAssetApi(Number(id))
+    await fetchAssets()
+  } catch (err) {
+    console.error('删除资产失败', err)
+  }
+}
 
 /** 处理资产卡片点击：批量模式下切换选中，普通模式下音频/视频打开播放器，其余打开预览 */
 function handleCardClick(asset: Asset) {
@@ -124,24 +235,15 @@ function handleCardClick(asset: Asset) {
   }
 }
 
-
 /** 跳转至 AI 生成资产页面 */
 function goToGenerate() {
   router.push({ name: 'assets-generate' })
 }
 
-/** 上传确认回调：遍历上传文件逐个添加到 store，无标签时默认标记为「上传」，关闭弹窗 */
-function onUploadConfirm(payload: { files: { name: string; preview: string }[]; type: AssetType; subType: AssetSubType | ''; tags: string[] }) {
-  payload.files.forEach(file => {
-    store.addAsset({
-      name: file.name.replace(/\.[^.]+$/, ''),
-      type: payload.type,
-      subType: payload.subType || undefined,
-      thumbnail: file.preview,
-      tags: payload.tags.length ? [...payload.tags] : ['上传'],
-    })
-  })
+/** 上传确认回调：弹窗内部已完成上传和创建资产，关闭弹窗并刷新列表 */
+function onUploadConfirm() {
   showUploadModal.value = false
+  fetchAssets()
 }
 
 // 音频播放弹窗
@@ -182,9 +284,39 @@ function closeVideoPlayer() {
   videoPlayerVisible.value = false
 }
 
+/** 重命名弹窗状态 */
+const renameModalVisible = ref(false)
+const renameAsset = ref<Asset | null>(null)
+const renameName = ref('')
+const renameLoading = ref(false)
+
+/** 打开重命名弹窗 */
+function openRenameModal(asset: Asset) {
+  renameAsset.value = asset
+  renameName.value = asset.name
+  renameModalVisible.value = true
+}
+
+/** 确认重命名：调用更新接口修改名称，成功后刷新列表 */
+async function confirmRename() {
+  if (!renameAsset.value) return
+  const trimmed = renameName.value.trim()
+  if (!trimmed) return
+  renameLoading.value = true
+  try {
+    await updateAsset({ id: Number(renameAsset.value.id), name: trimmed })
+    renameModalVisible.value = false
+    await fetchAssets()
+  } catch (err) {
+    console.error('重命名资产失败', err)
+  } finally {
+    renameLoading.value = false
+  }
+}
+
 onMounted(() => {
-  // 获取资产类型列表
   fetchAssetTypeList()
+  fetchAssets()
 })
 </script>
 
@@ -219,31 +351,49 @@ onMounted(() => {
           @delete-selected="deleteSelected"
         />
 
-        <!-- Grid View -->
-        <AssetGrid
-          v-if="viewMode === 'grid'"
-          :assets="paginatedAssets"
-          :batch-mode="batchMode"
-          :selected-ids="selectedAssets"
-          @card-click="handleCardClick"
-          @toggle-select="toggleSelect"
-        />
+        <!-- Loading -->
+        <div v-if="loading" class="flex items-center justify-center py-20">
+          <XbIcon name="loader-2" :size="24" class="animate-spin text-brand" />
+          <span class="ml-2 text-sm text-content-secondary">加载中...</span>
+        </div>
 
-        <!-- List View -->
-        <AssetList
-          v-else
-          :assets="paginatedAssets"
-          :batch-mode="batchMode"
-          :selected-ids="selectedAssets"
-          @card-click="handleCardClick"
-          @toggle-select="toggleSelect"
-          @preview="previewAsset = $event"
-          @delete="store.deleteAsset($event)"
-          @play-media="openMediaPlayer"
-        />
+        <!-- Error -->
+        <div v-else-if="error" class="flex flex-col items-center justify-center py-20">
+          <XbIcon name="alert-circle" :size="32" class="text-danger mb-2" />
+          <p class="text-sm text-content-secondary">{{ error }}</p>
+          <button class="btn-primary text-xs mt-4" @click="fetchAssets">重新加载</button>
+        </div>
+
+        <template v-else>
+          <!-- Grid View -->
+          <AssetGrid
+            v-if="viewMode === 'grid'"
+            :assets="paginatedAssets"
+            :batch-mode="batchMode"
+            :selected-ids="selectedAssets"
+            @card-click="handleCardClick"
+            @toggle-select="toggleSelect"
+            @request-rename="openRenameModal"
+            @delete="handleDeleteAsset($event)"
+          />
+
+          <!-- List View -->
+          <AssetList
+            v-else
+            :assets="paginatedAssets"
+            :batch-mode="batchMode"
+            :selected-ids="selectedAssets"
+            @card-click="handleCardClick"
+            @toggle-select="toggleSelect"
+            @preview="previewAsset = $event"
+            @delete="handleDeleteAsset($event)"
+            @play-media="openMediaPlayer"
+            @request-rename="openRenameModal"
+          />
+        </template>
 
         <XbEmpty
-          v-if="filteredAssets.length === 0"
+          v-if="!loading && !error && paginatedAssets.length === 0"
           :icon="'package'"
           description="没有找到匹配的素材"
         >
@@ -254,6 +404,7 @@ onMounted(() => {
 
         <!-- Pagination -->
         <XbPagination
+          v-if="!loading && !error && totalPages > 1"
           :current-page="currentPage"
           :total-pages="totalPages"
           @update:current-page="goToPage"
@@ -289,6 +440,24 @@ onMounted(() => {
       @close="showUploadModal = false"
       @confirm="onUploadConfirm"
     />
+
+    <!-- Rename Modal -->
+    <XbConfirmModal
+      v-model:visible="renameModalVisible"
+      title="重命名"
+      confirm-text="确认"
+      :loading="renameLoading"
+      :close-on-overlay="false"
+      @confirm="confirmRename"
+    >
+      <XbInput
+        v-model="renameName"
+        placeholder="请输入资产名称"
+        :maxlength="100"
+        size="md"
+        @keydown.enter="confirmRename"
+      />
+    </XbConfirmModal>
 
     <!-- Batch Delete Confirm -->
     <XbConfirmModal

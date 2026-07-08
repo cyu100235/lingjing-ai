@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import type { ModelItem } from '@/api/model'
+import type { AssetItem } from '@/api/assets'
 import type { ImageEnumOptions } from '../index.vue'
 import ModelSelect from './ModelSelect.vue'
+import AssetPickerModal from '@/components/AssetPickerModal/index.vue'
+import { onImgError } from '@/utils/image'
 
 export type ImageSubTab = 'text2img' | 'img2img'
 
@@ -13,7 +16,7 @@ export type ImageParams = {
   showNegPrompt: boolean
   resolution: string
   aspect: string
-  count: string
+  referenceImages: AssetItem[]
 }
 
 const props = defineProps<{
@@ -36,10 +39,25 @@ const filteredModels = computed(() =>
   props.models.filter(m => m.modality_type === 'image')
 )
 
-/** 当前选中模型的积分 */
-const credits = computed(() =>
-  filteredModels.value.find(m => m.model_id === props.params.selectedModel)?.prices_format ?? '2'
-)
+/** 当前选中模型按分辨率计算后的销售价 */
+const credits = computed(() => {
+  const model = filteredModels.value.find(m => m.model_id === props.params.selectedModel)
+  if (!model) {
+    return '-'
+  }
+  const resolution = props.enumOptions.resolution.find(o => o.value === props.params.resolution)
+  const sizeKey = resolution?.width && resolution?.height
+    ? `${resolution.width}x${resolution.height}`
+    : ''
+  const salePrices = model.sale_prices
+  let price = 0
+  if (sizeKey && salePrices?.resolution_prices?.[sizeKey] !== undefined) {
+    price = salePrices.resolution_prices[sizeKey]
+  } else if (salePrices?.per_image !== undefined) {
+    price = salePrices.per_image
+  }
+  return price > 0 ? `¥${price.toFixed(4)}` : (model.prices_format || '-')
+})
 
 // 模型列表变化时自动选中首项
 watch(filteredModels, (list) => {
@@ -53,53 +71,11 @@ const IMAGE_SUB_TABS = [
   { label: '图生图', value: 'img2img' as ImageSubTab },
 ]
 
-// 硬编码兜底值（与服务端枚举 value 格式一致）
-const FALLBACK_RESOLUTIONS = [
-  { value: '60', label: '480P' },
-  { value: '70', label: '540P' },
-  { value: '80', label: '720P' },
-  { value: '90', label: '1K' },
-  { value: '100', label: '2K' },
-  { value: '110', label: '4K' },
-]
-const FALLBACK_ASPECTS = [
-  { value: '10', label: '21:9' },
-  { value: '20', label: '16:9' },
-  { value: '30', label: '3:2' },
-  { value: '40', label: '4:3' },
-  { value: '50', label: '1:1' },
-  { value: '60', label: '3:4' },
-  { value: '70', label: '2:3' },
-  { value: '80', label: '9:16' },
-]
-const FALLBACK_COUNTS = [
-  { value: '1', label: '1张' },
-  { value: '2', label: '2张' },
-  { value: '3', label: '3张' },
-  { value: '4', label: '4张' },
-  { value: '5', label: '5张' },
-]
+/** 分辨率选项 */
+const resolutionOptions = computed(() => props.enumOptions.resolution)
 
-/** 分辨率选项（枚举优先，兜底硬编码） */
-const resolutionOptions = computed(() =>
-  props.enumOptions.resolution.length > 0
-    ? props.enumOptions.resolution
-    : FALLBACK_RESOLUTIONS
-)
-
-/** 比例选项（枚举优先，兜底硬编码） */
-const ratioOptions = computed(() =>
-  props.enumOptions.ratio.length > 0
-    ? props.enumOptions.ratio
-    : FALLBACK_ASPECTS
-)
-
-/** 数量选项（枚举优先，兜底硬编码） */
-const countOptions = computed(() =>
-  props.enumOptions.count.length > 0
-    ? props.enumOptions.count
-    : FALLBACK_COUNTS
-)
+/** 比例选项 */
+const ratioOptions = computed(() => props.enumOptions.ratio)
 
 // 枚举加载后，若当前值不在选项中，自动选中首项
 watch(resolutionOptions, (opts) => {
@@ -112,15 +88,47 @@ watch(ratioOptions, (opts) => {
     update('aspect', opts[0].value)
   }
 })
-watch(countOptions, (opts) => {
-  if (opts.length > 0 && !opts.find(o => o.value === props.params.count)) {
-    update('count', opts[0].value)
-  }
-})
-
 /** 更新单个字段 */
 function update<K extends keyof ImageParams>(key: K, value: ImageParams[K]) {
   emit('update:params', { ...props.params, [key]: value })
+}
+
+// ===================== 参考图（图生图） =====================
+const MAX_REFERENCE_IMAGES = 9
+
+/** 资产类型筛选选项（仅图片类资产） */
+const ASSET_TYPE_OPTIONS = [
+  { label: '人物角色', value: 'character' },
+  { label: '场景图片', value: 'background' },
+  { label: '人物表情', value: 'expression' },
+  { label: '物品道具', value: 'prop' },
+  { label: '人物动作', value: 'action' },
+  { label: '特效贴图', value: 'effect' },
+]
+
+const showAssetPicker = ref(false)
+
+function openAssetPicker() {
+  showAssetPicker.value = true
+}
+
+function handleAssetConfirm(selected: AssetItem[]) {
+  update('referenceImages', selected)
+}
+
+function removeReferenceImage(id: number) {
+  update('referenceImages', props.params.referenceImages.filter(a => a.id !== id))
+}
+
+// ===================== 参考图放大预览 =====================
+const previewImage = ref<AssetItem | null>(null)
+
+function openPreview(img: AssetItem) {
+  previewImage.value = img
+}
+
+function closePreview() {
+  previewImage.value = null
 }
 </script>
 
@@ -174,18 +182,76 @@ function update<K extends keyof ImageParams>(key: K, value: ImageParams[K]) {
       <XbTag type="brand" size="md" round>参考图</XbTag>
       <span class="text-xs text-content-tertiary ml-auto">示意图</span>
     </div>
-    <div class="flex gap-3">
-      <div class="w-24 h-24 rounded-lg overflow-hidden shrink-0 opacity-40">
-        <img src="/images/effect-crystal-lotus.jpg" class="w-full h-full object-cover" />
+    <div class="flex gap-3 flex-wrap">
+      <!-- 已选中的参考图缩略图 -->
+      <div
+        v-for="img in params.referenceImages"
+        :key="img.id"
+        class="relative w-24 h-24 rounded-lg overflow-hidden shrink-0 group cursor-pointer"
+        @click="openPreview(img)"
+      >
+        <img
+          :src="img.thumb || img.media_url"
+          :alt="img.name"
+          class="w-full h-full object-cover"
+          @error="onImgError"
+        />
+        <button
+          class="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+          @click.stop="removeReferenceImage(img.id)"
+        >
+          <XbIcon name="x" :size="12" class="text-white" />
+        </button>
       </div>
-      <div class="flex-1 border border-dashed border-border rounded-lg flex flex-col items-center justify-center gap-1 py-3 cursor-pointer hover:border-brand/50 transition-colors">
+      <!-- 添加按钮 -->
+      <div
+        v-if="params.referenceImages.length < MAX_REFERENCE_IMAGES"
+        class="flex-1 min-w-[120px] border border-dashed border-border rounded-lg flex flex-col items-center justify-center gap-1 py-3 cursor-pointer hover:border-brand/50 transition-colors"
+        @click="openAssetPicker"
+      >
         <XbIcon name="plus" :size="20" class="text-content-tertiary" />
-        <span class="text-xs text-content-tertiary">从 <span class="text-green-400 cursor-pointer hover:underline">资产</span> 中上传</span>
-        <span class="text-xs text-content-tertiary">从 <span class="text-green-400 cursor-pointer hover:underline">角色</span> <span class="text-green-400 cursor-pointer hover:underline">场景</span> <span class="text-green-400 cursor-pointer hover:underline">道具</span> 中获取</span>
-        <span class="text-[11px] text-content-tertiary/60">(0/9)</span>
+        <span class="text-xs text-content-tertiary">
+          从
+          <span class="text-green-400">我的资产</span>
+          中选择
+        </span>
+        <span class="text-[11px] text-content-tertiary/60">
+          ({{ params.referenceImages.length }}/{{ MAX_REFERENCE_IMAGES }})
+        </span>
       </div>
     </div>
   </div>
+
+  <!-- 参考图放大预览 -->
+  <Teleport to="body">
+    <div
+      v-if="previewImage"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm cursor-zoom-out"
+      @click="closePreview"
+    >
+      <img
+        :src="previewImage.media_url"
+        :alt="previewImage.name"
+        class="max-w-[90vw] max-h-[90vh] object-contain rounded-lg shadow-2xl"
+        @click.stop
+        @error="onImgError"
+      />
+    </div>
+  </Teleport>
+
+  <!-- 资产选择弹窗 -->
+  <AssetPickerModal
+    v-if="params.subTab === 'img2img'"
+    :visible="showAssetPicker"
+    :types="ASSET_TYPE_OPTIONS"
+    :multiple="true"
+    :max-select="MAX_REFERENCE_IMAGES"
+    :initial-selected-ids="params.referenceImages.map(a => a.id)"
+    width="w-[960px]"
+    content-height="min-h-[420px]"
+    @close="showAssetPicker = false"
+    @confirm="handleAssetConfirm"
+  />
 
   <!-- 反向提示词 -->
   <XbButton
@@ -220,7 +286,7 @@ function update<K extends keyof ImageParams>(key: K, value: ImageParams[K]) {
   </div>
 
   <!-- 参数行 -->
-  <div class="grid grid-cols-3 gap-3">
+  <div class="grid grid-cols-2 gap-3">
     <div class="flex flex-col gap-1">
       <label class="text-xs text-content-tertiary">分辨率</label>
       <XbSelect
@@ -239,15 +305,6 @@ function update<K extends keyof ImageParams>(key: K, value: ImageParams[K]) {
         @update:model-value="update('aspect', $event)"
       />
     </div>
-    <div class="flex flex-col gap-1">
-      <label class="text-xs text-content-tertiary">数量</label>
-      <XbSelect
-        :model-value="params.count"
-        :options="countOptions"
-        size="sm"
-        @update:model-value="update('count', $event)"
-      />
-    </div>
   </div>
 
   <!-- 生成按钮 -->
@@ -262,7 +319,7 @@ function update<K extends keyof ImageParams>(key: K, value: ImageParams[K]) {
     <span v-else class="flex items-center gap-2">
       生成图片
       <XbIcon name="wand-sparkles" :size="14" />
-      {{ credits }} 积分
+      {{ credits }} 余额
     </span>
   </XbButton>
 

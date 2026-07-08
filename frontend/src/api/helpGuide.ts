@@ -30,5 +30,5 @@ export interface GuideItem {
  * 获取快速入门列表
  */
 export const getGuideList = (): Promise<GuideItem[]> => {
-  return request.get<GuideItem[]>('/xbHelp/api/Guide/list')
+  return request.get<GuideItem[]>('/app/xbHelp/api/Guide/list')
 }

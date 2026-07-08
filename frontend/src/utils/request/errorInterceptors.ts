@@ -13,16 +13,7 @@ export function responseErrorInterceptor(error: AxiosError<ApiResponse>) {
   const responseData = error.response?.data
   const url = error.config?.url
 
-  if (status === 401) {
-    appEventBus.emit<RequestEventDetail>(requestEventNameMap['unauthorized'], {
-      type: 'unauthorized',
-      message,
-      status: 401,
-      url,
-      response: responseData,
-    })
-    localStorage.removeItem('token')
-  } else if (status === 403) {
+  if (status === 403) {
     appEventBus.emit<RequestEventDetail>(requestEventNameMap['forbidden'], {
       type: 'forbidden',
       message,
@@ -61,6 +52,5 @@ export function responseErrorInterceptor(error: AxiosError<ApiResponse>) {
       response: responseData,
     })
   }
-
-  return Promise.reject(new Error(message))
+  return Promise.reject(message)
 }

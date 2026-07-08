@@ -16,6 +16,7 @@ const emit = defineEmits<{
   preview: [asset: Asset]
   delete: [id: string]
   playMedia: [asset: Asset]
+  requestRename: [asset: Asset]
 }>()
 
 function handleActionClick(asset: Asset) {
@@ -82,6 +83,9 @@ function confirmDelete() {
         </div>
       </div>
       <span class="text-xs text-content-tertiary">{{ asset.createdAt }}</span>
+      <button v-if="!batchMode" class="btn-ghost p-1.5 rounded" @click.stop="emit('requestRename', asset)" title="重命名">
+        <XbIcon name="pencil" :size="14" class="text-content-tertiary hover:text-brand" />
+      </button>
       <button v-if="!batchMode" class="btn-ghost p-1.5 rounded" @click.stop="handleActionClick(asset)">
         <XbIcon name="zoom-in" :size="14" class="text-content-tertiary hover:text-brand" />
       </button>

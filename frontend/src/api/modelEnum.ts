@@ -10,9 +10,9 @@ export interface ModelEnumItem {
   key?: string
   /** 样式HTML */
   style?: string
-  /** 宽度（size / ratio 枚举） */
+  /** 宽度（image_size / video_size / ratio 枚举） */
   width?: number
-  /** 高度（size / ratio 枚举） */
+  /** 高度（image_size / video_size / ratio 枚举） */
   height?: number
   /** 比例值（ratio 枚举，如 "16:9"） */
   ratio?: string
@@ -24,7 +24,7 @@ export interface ModelEnumItem {
   service?: string
 }
 
-/** 模型枚举全量响应：{ modality: [...], size: [...], ratio: [...], ... } */
+/** 模型枚举全量响应：{ modality: [...], image_size: [...], video_size: [...], ratio: [...], ... } */
 export type ModelEnumResponse = Record<string, ModelEnumItem[]>
 
 /** 模型枚举查询参数 */
@@ -38,5 +38,5 @@ export interface ModelEnumParams {
  * @param params - 可选查询参数（name-指定枚举名称）
  */
 export const getModelEnumList = (params?: ModelEnumParams): Promise<ModelEnumResponse> => {
-  return request.get<ModelEnumResponse>('/xbAiModelAgent/api/ModelEnum/index', { params })
+  return request.get<ModelEnumResponse>('/app/xbAiModelAgent/api/ModelEnum/index', { params })
 }

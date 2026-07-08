@@ -10,10 +10,29 @@ defineProps<{
   selectedIds: string[]
 }>()
 
-defineEmits<{
+const emit = defineEmits<{
   cardClick: [asset: Asset]
   toggleSelect: [id: string]
+  requestRename: [asset: Asset]
+  delete: [id: string]
 }>()
+
+// 删除确认
+const deleteConfirmVisible = ref(false)
+const pendingDeleteId = ref<string | null>(null)
+
+function requestDelete(id: string) {
+  pendingDeleteId.value = id
+  deleteConfirmVisible.value = true
+}
+
+function confirmDelete() {
+  if (pendingDeleteId.value) {
+    emit('delete', pendingDeleteId.value)
+  }
+  deleteConfirmVisible.value = false
+  pendingDeleteId.value = null
+}
 </script>
 
 <template>
@@ -24,10 +43,20 @@ defineEmits<{
         <img :src="asset.thumbnail" :alt="asset.name"
           class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           @error="onImgError" />
-        <!-- Hover icon (normal mode) -->
+        <!-- Hover play icon (normal mode, audio/video) -->
         <div v-if="!batchMode && (isVideoAsset(asset.type) || isAudioAsset(asset.type))"
           class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
           <XbIcon name="play" :size="24" class="text-white drop-shadow" fill="white" />
+        </div>
+        <!-- Hover action buttons (normal mode) -->
+        <div v-if="!batchMode"
+          class="absolute top-1.5 right-1.5 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <button class="w-6 h-6 rounded bg-black/50 hover:bg-black/70 flex items-center justify-center" @click.stop="emit('requestRename', asset)" title="重命名">
+            <XbIcon name="pencil" :size="12" class="text-white" />
+          </button>
+          <button class="w-6 h-6 rounded bg-black/50 hover:bg-black/70 flex items-center justify-center" @click.stop="requestDelete(asset.id)" title="删除">
+            <XbIcon name="trash-2" :size="12" class="text-white" />
+          </button>
         </div>
       </div>
       <div class="p-2.5">
@@ -54,4 +83,14 @@ defineEmits<{
       </div>
     </div>
   </div>
+
+  <!-- 删除确认弹窗 -->
+  <XbConfirmModal
+    v-model:visible="deleteConfirmVisible"
+    title="删除确认"
+    message="确定要删除该素材吗？此操作不可恢复。"
+    confirm-text="删除"
+    confirm-type="danger"
+    @confirm="confirmDelete"
+  />
 </template>

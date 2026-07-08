@@ -19,14 +19,27 @@ const siteName = computed(() => siteConfigStore.config?.system?.web_name || '镜
 /** 站点 Logo（带 fallback） */
 const siteLogo = computed(() => siteConfigStore.config?.system?.web_logo || '/images/logo.png')
 
-const navItems = [
-  { icon: 'house', label: '首页', path: '/' },
-  { icon: 'folder-open', label: '作品管理', path: '/works' },
-  { icon: 'layers', label: '我的资产', path: '/assets' },
-  { icon: 'wand-sparkles', label: '生成资产', path: '/assets/generate' },
-  { icon: 'shopping-bag', label: '资产市场', path: '/marketplace' },
-  { icon: 'globe', label: '社区动态', path: '/community' },
-]
+/** 资产市场是否开启（market_status === '20' 为开启） */
+const marketOpen = computed(() => siteConfigStore.config?.assets?.market?.market_status === '20')
+/** 社区动态是否开启（community_status === '20' 为开启） */
+const communityOpen = computed(() => siteConfigStore.config?.community?.community_status === '20')
+
+const navItems = computed(() => {
+  const items = [
+    { icon: 'house', label: '首页', path: '/' },
+    { icon: 'folder-open', label: '作品管理', path: '/works' },
+    { icon: 'layers', label: '我的资产', path: '/assets' },
+    { icon: 'wand-sparkles', label: '生成资产', path: '/assets/generate' },
+    { icon: 'shopping-bag', label: '资产市场', path: '/marketplace' },
+    { icon: 'globe', label: '社区动态', path: '/community' },
+  ]
+  // 资产市场或社区动态关闭时隐藏对应入口
+  return items.filter(item => {
+    if (item.path === '/marketplace' && !marketOpen.value) return false
+    if (item.path === '/community' && !communityOpen.value) return false
+    return true
+  })
+})
 
 const currentPath = computed(() => route.path)
 

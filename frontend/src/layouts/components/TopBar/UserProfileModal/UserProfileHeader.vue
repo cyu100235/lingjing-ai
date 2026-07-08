@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { useUserStore } from '@/stores/user'
-import { MEMBERSHIP_CONFIG } from '@/stores/user'
 import { XbMessage } from '@/xbUi/XbMessage/method'
 
 const userStore = useUserStore()
@@ -136,7 +135,6 @@ async function handleAvatarChange(e: Event) {
           </button>
         </template>
       </div>
-      <span class="mt-1.5 text-xs font-medium px-2 py-0.5 rounded-full" :class="[MEMBERSHIP_CONFIG[userStore.userInfo.level || 'free'].color, 'bg-surface-overlay']">{{ MEMBERSHIP_CONFIG[userStore.userInfo.level || 'free'].label }}</span>
       <span class="mt-1 text-xs text-content-tertiary">ID: {{ userStore.userInfo.username }}</span>
     </div>
   </div>

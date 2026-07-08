@@ -68,33 +68,33 @@ export interface UnreadCountResult {
  * 获取通知类型选项
  */
 export const getNoticeTypeOptions = (): Promise<NoticeTypeOption[]> => {
-  return request.get<NoticeTypeOption[]>('/xbWebMessage/api/Types/options')
+  return request.get<NoticeTypeOption[]>('/app/xbWebMessage/api/Types/options')
 }
 
 /**
  * 获取用户通知列表
  */
 export const getNoticeList = (params: NoticeListParams): Promise<NoticeListResult> => {
-  return request.get<NoticeListResult>('/xbWebMessage/api/Notice/list', { params })
+  return request.get<NoticeListResult>('/app/xbWebMessage/api/Notice/list', { params })
 }
 
 /**
  * 标记单条通知为已读
  */
 export const markNoticeRead = (notice_id: number | string): Promise<unknown> => {
-  return request.put<unknown>('/xbWebMessage/api/Notice/markRead', { notice_id })
+  return request.put<unknown>('/app/xbWebMessage/api/Notice/markRead', { notice_id })
 }
 
 /**
  * 一键全部已读
  */
 export const markAllNoticeRead = (): Promise<unknown> => {
-  return request.put<unknown>('/xbWebMessage/api/Notice/markAllRead')
+  return request.put<unknown>('/app/xbWebMessage/api/Notice/markAllRead')
 }
 
 /**
  * 获取用户未读通知数量
  */
 export const getUnreadCount = (): Promise<UnreadCountResult> => {
-  return request.get<UnreadCountResult>('/xbWebMessage/api/Notice/unreadCount')
+  return request.get<UnreadCountResult>('/app/xbWebMessage/api/Notice/unreadCount')
 }

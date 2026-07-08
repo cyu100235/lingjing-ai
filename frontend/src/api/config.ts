@@ -157,6 +157,20 @@ export interface EmailTemplateType {
 /** 邮件模板配置（以模板标识为 key 的字典） */
 export type EmailConfigType = Partial<Record<EmailSceneName, EmailTemplateType>>
 
+// 资产配置类型
+export interface AssetsType {
+  // 资产市场配置
+  market: {
+    // 资产市场是否开启：10关闭，20开启
+    market_status: "10" | '20'
+  }
+}
+// 社区系统配置
+export interface communityType {
+  // 社区动态菜单是否开启：10关闭，20开启
+  community_status: "10" | '20'
+}
+
 /** 站点配置信息 */
 export interface SiteConfig {
   // 系统配置
@@ -171,11 +185,15 @@ export interface SiteConfig {
   user: UserConfigType
   // 登录方式列表
   login_list: LoginListType[]
+  // 资产市场配置
+  assets: AssetsType
+  // 社区动态配置
+  community: communityType
 }
 
 /**
  * 获取站点配置
  */
 export const getSiteConfig = (): Promise<SiteConfig> => {
-  return request.get<SiteConfig>('/xbMovieApp/api/Config/index')
+  return request.get<SiteConfig>('/app/xbMovieApp/api/Config/index')
 }

@@ -17,6 +17,7 @@ const props = withDefaults(defineProps<{
   error?: string
   label?: string
   clearable?: boolean
+  size?: 'sm' | 'md' | 'lg'
 }>(), {
   modelValue: '',
   options: () => [],
@@ -25,6 +26,7 @@ const props = withDefaults(defineProps<{
   error: '',
   label: '',
   clearable: false,
+  size: 'md',
 })
 
 const emit = defineEmits<{
@@ -42,6 +44,24 @@ const listRef = ref<HTMLElement>()
 const selectedItemRef = ref<HTMLElement>()
 
 const selectedOption = computed(() => props.options.find(o => String(o.value) === String(props.modelValue)))
+
+const triggerSizeClasses: Record<string, string> = {
+  sm: 'px-2.5 py-1.5 text-xs gap-2',
+  md: 'px-3 py-2 text-sm gap-3',
+  lg: 'px-4 py-2.5 text-base gap-3',
+}
+
+const dropdownItemSizeClasses: Record<string, string> = {
+  sm: 'px-2.5 py-2 text-xs gap-2',
+  md: 'px-3 py-2.5 text-sm gap-3',
+  lg: 'px-4 py-3 text-base gap-3',
+}
+
+const iconSizeMap: Record<string, number> = {
+  sm: 12,
+  md: 14,
+  lg: 16,
+}
 
 /** 计算下拉面板定位，使其始终对齐触发按钮；当下方空间不足时向上展开 */
 function updateDropdownPosition() {
@@ -148,22 +168,23 @@ onUnmounted(() => {
       <button
         type="button"
         :disabled="disabled"
-        class="w-full flex items-center gap-3 px-3 py-2 rounded-lg border text-left transition-all duration-200"
+        class="w-full flex items-center rounded-lg border text-left transition-all duration-200"
         :class="[
           error ? 'border-danger/60' : 'border-border hover:border-brand/40',
-          disabled ? 'opacity-50 cursor-not-allowed bg-surface-overlay/50' : 'bg-surface text-content cursor-pointer'
+          disabled ? 'opacity-50 cursor-not-allowed bg-surface-overlay/50' : 'bg-surface text-content cursor-pointer',
+          triggerSizeClasses[props.size]
         ]"
         @click="toggle"
       >
         <slot name="selected" :option="selectedOption">
           <template v-if="selectedOption">
-            <span class="text-sm font-medium text-content">{{ selectedOption.label }}</span>
+            <span class="font-medium text-content">{{ selectedOption.label }}</span>
           </template>
           <template v-else>
-            <span class="text-sm text-content-tertiary">{{ placeholder }}</span>
+            <span class="text-content-tertiary">{{ placeholder }}</span>
           </template>
         </slot>
-        <XbIcon name="chevron-down" :size="14" class="shrink-0 text-content-tertiary ml-auto transition-transform" :class="isOpen ? 'rotate-180' : ''" />
+        <XbIcon name="chevron-down" :size="iconSizeMap[props.size]" class="shrink-0 text-content-tertiary ml-auto transition-transform" :class="isOpen ? 'rotate-180' : ''" />
       </button>
 
       <button
@@ -171,7 +192,7 @@ onUnmounted(() => {
         class="absolute right-8 top-1/2 -translate-y-1/2 text-content-tertiary hover:text-content transition-colors"
         @click.stop="handleClear"
       >
-        <XbIcon name="x-circle" :size="14" />
+        <XbIcon name="x-circle" :size="iconSizeMap[props.size]" />
       </button>
     </div>
     <Teleport to="body">
@@ -188,12 +209,12 @@ onUnmounted(() => {
               v-for="opt in options"
               :key="opt.value"
               :ref="el => { if (String(opt.value) === String(modelValue)) selectedItemRef = el as HTMLElement }"
-              class="w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors"
-              :class="modelValue === opt.value ? 'bg-brand/10' : 'hover:bg-surface-overlay'"
+              class="w-full flex items-center text-left transition-colors"
+              :class="[modelValue === opt.value ? 'bg-brand/10' : 'hover:bg-surface-overlay', dropdownItemSizeClasses[props.size]]"
               @click="select(opt.value)"
             >
               <slot name="option" :option="opt">
-                <span class="text-sm font-medium" :class="modelValue === opt.value ? 'text-brand' : 'text-content'">{{ opt.label }}</span>
+                <span class="font-medium" :class="modelValue === opt.value ? 'text-brand' : 'text-content'">{{ opt.label }}</span>
               </slot>
             </button>
           </div>

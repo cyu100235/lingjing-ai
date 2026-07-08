@@ -30,5 +30,5 @@ export interface FaqListResult {
  * 获取FAQ列表
  */
 export const getFaqList = (params?: FaqListParams): Promise<FaqListResult[]> => {
-  return request.get<FaqListResult[]>('/xbHelp/api/Faq/list', { params })
+  return request.get<FaqListResult[]>('/app/xbHelp/api/Faq/list', { params })
 }

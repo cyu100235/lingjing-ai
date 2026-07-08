@@ -1,5 +1,5 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosProgressEvent } from 'axios'
-import { defaultConfig } from './config'
+import { defaultConfig, isWhitelisted } from './config'
 import { requestInterceptor, requestErrorInterceptor } from './requestInterceptors'
 import { responseInterceptor } from './responseInterceptors'
 import { responseErrorInterceptor } from './errorInterceptors'
@@ -34,10 +34,11 @@ export class RequestClient {
   private getToken: GetTokenFn
 
   constructor(config: AxiosRequestConfig = {}, getToken?: GetTokenFn) {
+    // 创建 Axios 实例
     this.instance = axios.create({ ...defaultConfig, ...config })
-    
+    // 设置获取 Token 的函数
     this.getToken = getToken || (() => localStorage.getItem('token'))
-
+    // 配置请求与响应拦截器
     this.setupInterceptors()
   }
 
@@ -64,7 +65,6 @@ export class RequestClient {
   // POST 请求
   post<T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
     return this.instance.post<ApiResponse<T>>(url, data, config).then((res) => {
-      console.log(res.data)
       return res.data.data
     })
   }
@@ -137,6 +137,11 @@ export class RequestClient {
   ): Promise<void> {
     const token = this.getToken()
     const fullUrl = `${defaultConfig.baseURL}${url}`
+
+    // 非白名单接口必须登录，无 Token 则拒绝请求
+    if (!isWhitelisted(url) && !token) {
+      return Promise.reject(new Error('登录已过期，请重新登录'))
+    }
 
     return new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest()

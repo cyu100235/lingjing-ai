@@ -4,17 +4,6 @@ import { upload } from '@/api/upload'
 import { bindMobile, unlockBindMobile, bindMail, unlockMail } from '@/api/bind'
 import type { LoginParams, MobileLoginParams, EmailLoginParams, RegisterParams, ChangePasswordParams, ResetPasswordParams, UserInfo } from '@/api/user'
 
-/** 会员等级类型：免费 / 月度 / 年度 / 终身 */
-export type MembershipLevel = 'free' | 'monthly' | 'annual' | 'lifetime'
-
-/** 会员等级配置（标签与颜色） */
-export const MEMBERSHIP_CONFIG: Record<MembershipLevel, { label: string; color: string }> = {
-  free: { label: '免费会员', color: 'text-content-tertiary' },
-  monthly: { label: '月度会员', color: 'text-amber-400' },
-  annual: { label: '年度会员', color: 'text-purple-400' },
-  lifetime: { label: '终身会员', color: 'text-amber-400' },
-}
-
 /** 用户状态管理 */
 export const useUserStore = defineStore('user', () => {
   /** 是否已登录 */
@@ -37,7 +26,6 @@ export const useUserStore = defineStore('user', () => {
     balance: 0,
     freeze_balance: 0,
     integral: 0,
-    level: 'free',
   })
 
   /** 手机号是否已绑定 */
@@ -89,7 +77,6 @@ export const useUserStore = defineStore('user', () => {
             balance: 0,
             freeze_balance: 0,
             integral: 0,
-            level: 'free',
           }
         }
       }
@@ -178,7 +165,6 @@ export const useUserStore = defineStore('user', () => {
         balance: 0,
         freeze_balance: 0,
         integral: 0,
-        level: 'free',
       }
     }
   }

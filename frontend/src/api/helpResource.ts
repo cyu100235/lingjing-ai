@@ -25,5 +25,5 @@ export interface ResourceListResult {
  * 获取资源列表
  */
 export const getResourceList = (): Promise<ResourceListResult[]> => {
-  return request.get<ResourceListResult[]>('/xbHelp/api/Resource/list')
+  return request.get<ResourceListResult[]>('/app/xbHelp/api/Resource/list')
 }

@@ -22,5 +22,5 @@ export interface AssetTypeItem {
  * 获取资产类型列表
  */
 export const getAssetTypeList = (): Promise<AssetTypeItem[]> => {
-  return request.get<AssetTypeItem[]>('/xbAiAsset/api/AssetType/list')
+  return request.get<AssetTypeItem[]>('/app/xbAiAsset/api/AssetType/list')
 }

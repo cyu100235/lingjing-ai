@@ -8,12 +8,15 @@ export interface UploadResult {
 
 /**
  * 文件上传（支持上传进度）
+ * @param file 文件
+ * @param options 上传选项
+ * @returns 
  */
 export const upload = (
     file: File,
     options?: Pick<UploadOptions, 'onProgress' | 'abortController'>,
 ): Promise<UploadResult> => {
-    return request.upload<UploadResult>('/xbUpload/api/Upload/upload', file, {
+    return request.upload<UploadResult>('/app/xbUpload/api/Upload/upload', file, {
         fieldName: 'file',
         ...options,
     })

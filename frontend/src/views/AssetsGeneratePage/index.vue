@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import { getModelList, type ModelItem, aigcModel, chatModel } from '@/api/model'
+import { getModelList, type ModelItem } from '@/api/model'
+import { chat } from '@/api/chat'
+import { generateMedia } from '@/api/media'
 import { getModelEnumList, type ModelEnumResponse, type ModelEnumItem } from '@/api/modelEnum'
-import { XbMessage } from '@/xbUi'
+import { XbMessage, XbConfirm } from '@/xbUi'
 import { getModelLogList, deleteModelLog, batchDeleteModelLog, type ModelLogItem } from '@/api/modelLog'
 import ImagePanel, { type ImageParams } from './components/ImagePanel.vue'
 import VideoPanel, { type VideoParams } from './components/VideoPanel.vue'
@@ -9,17 +11,24 @@ import ResultPanel from './components/ResultPanel.vue'
 import type { ResultItem } from './components/ResultPanel.vue'
 
 // ===================== 枚举选项类型 =====================
-export type EnumOption = { value: string; label: string }
+export type EnumOption = {
+  value: string
+  label: string
+  /** 宽度（size 枚举） */
+  width?: number
+  /** 高度（size 枚举） */
+  height?: number
+  /** 比例值（ratio 枚举，如 "16:9"） */
+  ratio?: string
+}
 export type ImageEnumOptions = {
   resolution: EnumOption[]
   ratio: EnumOption[]
-  count: EnumOption[]
 }
 export type VideoEnumOptions = {
   resolution: EnumOption[]
   ratio: EnumOption[]
   duration: EnumOption[]
-  count: EnumOption[]
 }
 
 // ===================== 主 Tab =====================
@@ -34,13 +43,32 @@ const MAIN_TABS = [
 // ===================== 模型 =====================
 const models = ref<ModelItem[]>([])
 
-/** 获取模型列表 */
-async function fetchModels() {
+/** 文本/对话模型列表（用于优化描述词） */
+const textModels = ref<ModelItem[]>([])
+
+/** 主 Tab 与模型分组标识映射 */
+const MODEL_TAB_GROUP_MAP: Record<MainTab, string> = {
+  image: 'image',
+  video: 'video',
+}
+
+/** 获取当前主 Tab 对应的媒体模型列表 */
+async function fetchModels(tab: MainTab) {
   try {
-    const list = await getModelList()
+    const list = await getModelList({ group_code: MODEL_TAB_GROUP_MAP[tab] })
     models.value = list
   } catch (e) {
     console.error('获取模型列表失败', e)
+  }
+}
+
+/** 获取文本模型列表（用于优化描述词） */
+async function fetchTextModels() {
+  try {
+    const list = await getModelList({ group_code: 'text' })
+    textModels.value = list
+  } catch (e) {
+    console.error('获取文本模型列表失败', e)
   }
 }
 
@@ -49,17 +77,25 @@ const enumData = ref<ModelEnumResponse>({})
 
 /** 枚举名称映射（与服务端 JSON key 对应） */
 const ENUM_NAME_MAP = {
-  size: 'size',                       // 尺寸/分辨率
+  imageSize: 'image_size',             // 图片分辨率
+  videoSize: 'video_size',             // 视频分辨率
   ratio: 'ratio',                     // 比例
   videoDuration: 'video_duration',    // 视频时长
   modality: 'modality',               // 模态类型
   taskLogStatus: 'task_log_status',   // 任务日志状态
+  limit: 'limit',                     // 数量限制
 } as const
 
-/** 根据枚举分组名查找选项列表 */
+/** 根据枚举分组名查找选项列表（保留扩展字段） */
 function getEnumList(name: string): EnumOption[] {
   const items = enumData.value[name]
-  return items?.map((item: ModelEnumItem) => ({ value: item.value, label: item.label })) ?? []
+  return items?.map((item: ModelEnumItem) => ({
+    value: item.value,
+    label: item.label,
+    ...(item.width !== undefined ? { width: item.width } : {}),
+    ...(item.height !== undefined ? { height: item.height } : {}),
+    ...(item.ratio !== undefined ? { ratio: item.ratio } : {}),
+  })) ?? []
 }
 
 /** 获取枚举配置 */
@@ -72,19 +108,17 @@ async function fetchEnums() {
   }
 }
 
-/** 图片枚举选项（size/ratio 为共享枚举，count 无服务端枚举由兜底值填充） */
+/** 图片枚举选项（image_size/ratio） */
 const imageEnumOptions = computed<ImageEnumOptions>(() => ({
-  resolution: getEnumList(ENUM_NAME_MAP.size),
+  resolution: getEnumList(ENUM_NAME_MAP.imageSize),
   ratio: getEnumList(ENUM_NAME_MAP.ratio),
-  count: [],
 }))
 
-/** 视频枚举选项（size/ratio 为共享枚举，count 无服务端枚举由兜底值填充） */
+/** 视频枚举选项（video_size/ratio） */
 const videoEnumOptions = computed<VideoEnumOptions>(() => ({
-  resolution: getEnumList(ENUM_NAME_MAP.size),
+  resolution: getEnumList(ENUM_NAME_MAP.videoSize),
   ratio: getEnumList(ENUM_NAME_MAP.ratio),
   duration: getEnumList(ENUM_NAME_MAP.videoDuration),
-  count: [],
 }))
 
 // ===================== 图片面板状态 =====================
@@ -94,9 +128,9 @@ const imageParams = ref<ImageParams>({
   prompt: '',
   negPrompt: '',
   showNegPrompt: false,
-  resolution: '90',
+  resolution: '30',
   aspect: '20',
-  count: '1',
+  referenceImages: [],
 })
 
 // ===================== 视频面板状态 =====================
@@ -107,17 +141,16 @@ const videoParams = ref<VideoParams>({
   resolution: '80',
   aspect: '20',
   duration: '5',
-  count: '1',
 })
 
-const videoCreditsOriginal = '45'
+
 
 // ===================== 优化描述词 =====================
 const isOptimizing = ref(false)
 
-/** 从模型列表中查找可用的对话模型 */
+/** 从文本模型列表中查找可用的对话模型 */
 const chatModelId = computed(() => {
-  const textModel = models.value.find(m => m.modality === '10')
+  const textModel = textModels.value.find(m => m.modality === '10')
   return textModel?.model_id ?? ''
 })
 
@@ -148,7 +181,7 @@ async function handleImageOptimize(field: 'prompt' | 'negPrompt') {
     const messages = buildOptimizeMessages(currentText, mode)
     // 先清空，流式逐字填充
     imageParams.value = { ...imageParams.value, [field]: '' }
-    await chatModel(
+    await chat(
       { model_id: chatModelId.value, messages },
       (chunk) => {
         const current = imageParams.value[field]
@@ -190,7 +223,7 @@ async function handleVideoOptimize() {
     const messages = buildOptimizeMessages(currentText, 'video')
     // 先清空，流式逐字填充
     videoParams.value = { ...videoParams.value, prompt: '' }
-    await chatModel(
+    await chat(
       { model_id: chatModelId.value, messages },
       (chunk) => {
         const current = videoParams.value.prompt
@@ -252,9 +285,27 @@ function mapLogToResult(log: ModelLogItem): ResultItem {
     case '30': type = 'audio'; break
     default: type = 'image'; break
   }
-  const thumbnail = log.asset_urls?.[0] || ''
-  const mediaUrl = log.asset_urls?.[0] || ''
+  // 缩略图：图片类型优先用压缩后地址，其他类型使用原始 URL
+  const thumbnail = log.asset_url || ''
+  const thumbnailCompressed = log.asset_url_compressed || undefined
+  const mediaUrl = log.asset_url || ''
   const prompt = log.prompt || log.model_id || ''
+
+  // 分辨率：优先使用数据库字段 width/height，其次回退请求参数/结果 size
+  let resolution = ''
+  const width = log.width || (log.params?.width ? Number(log.params.width) : undefined)
+  const height = log.height || (log.params?.height ? Number(log.params.height) : undefined)
+  if (width && height) {
+    resolution = `${width}x${height}`
+  } else if (log.result?.size) {
+    resolution = log.result.size
+  }
+
+  // 实际消费金额格式化
+  const rawSaleAmount = log.sale_amount !== undefined && log.sale_amount !== null ? Number(log.sale_amount) : NaN
+  const saleAmount = !isNaN(rawSaleAmount) && rawSaleAmount > 0
+    ? `¥${rawSaleAmount.toFixed(4)}`
+    : '—'
 
   // 优先使用 log.status（10=待执行, 20=执行中, 30=已完成, 40=失败）映射
   const logStatus = String(log.status || '')
@@ -300,11 +351,14 @@ function mapLogToResult(log: ModelLogItem): ResultItem {
     id: String(log.id),
     type,
     thumbnail,
+    thumbnailCompressed,
     mediaUrl,
     prompt,
     status,
     createAt: log.create_at,
     modelName: log.model_id,
+    resolution,
+    saleAmount,
   }
 }
 
@@ -336,6 +390,7 @@ async function fetchModelLogs() {
     if (modality) params.modality = modality
 
     const res = await getModelLogList(params)
+    
     if (res?.data) {
       results.value = res.data.map(mapLogToResult)
       currentPage.value = res.current_page
@@ -355,34 +410,63 @@ async function fetchModelLogs() {
 
 /** 触发 AI 生成（图片） */
 async function handleImageGenerate() {
-  const { prompt, selectedModel } = imageParams.value
+  const { prompt, selectedModel, negPrompt, resolution, referenceImages } = imageParams.value
   if (!prompt.trim() || !selectedModel) return
   isGenerating.value = true
   try {
-    await aigcModel({ model_id: selectedModel, prompt })
+    // 分辨率：从枚举中获取 width/height
+    const resolutionItem = imageEnumOptions.value.resolution.find(o => o.value === resolution)
+    const width = resolutionItem?.width
+    const height = resolutionItem?.height
+    // 参考图URL列表
+    const referenceImageUrls = referenceImages.length > 0
+      ? referenceImages.map(a => a.media_url)
+      : undefined
+    await generateMedia({
+      model: selectedModel,
+      prompt,
+      width,
+      height,
+      negative_prompt: negPrompt || undefined,
+      reference_image_urls: referenceImageUrls,
+    })
     // 生成成功后清空提示词
     imageParams.value = { ...imageParams.value, prompt: '', negPrompt: '' }
-    // 生成成功后刷新日志列表
-    await fetchModelLogs()
   } catch (e) {
+    const msg = e instanceof Error ? e.message : '生成失败'
+    XbConfirm({ title: '生成失败', message: msg, showCancel: false })
     console.error('生成失败', e)
   } finally {
     isGenerating.value = false
+    // 生成后刷新日志列表
+    await fetchModelLogs()
   }
 }
 
 /** 触发 AI 生成（视频） */
 async function handleVideoGenerate() {
-  const { prompt, selectedModel } = videoParams.value
+  const { prompt, selectedModel, resolution, duration } = videoParams.value
   if (!prompt.trim() || !selectedModel) return
   isGenerating.value = true
   try {
-    await aigcModel({ model_id: selectedModel, prompt })
+    // 分辨率：从枚举中获取 width/height
+    const resolutionItem = videoEnumOptions.value.resolution.find(o => o.value === resolution)
+    const width = resolutionItem?.width
+    const height = resolutionItem?.height
+    await generateMedia({
+      model: selectedModel,
+      prompt,
+      width,
+      height,
+      duration_seconds: duration || undefined,
+    })
     // 生成成功后清空提示词
     videoParams.value = { ...videoParams.value, prompt: '' }
     // 生成成功后刷新日志列表
     await fetchModelLogs()
   } catch (e) {
+    const msg = e instanceof Error ? e.message : '生成失败'
+    XbConfirm({ title: '生成失败', message: msg, showCancel: false })
     console.error('生成失败', e)
   } finally {
     isGenerating.value = false
@@ -429,11 +513,14 @@ async function handleBatchDeleteItems(ids: string[]) {
 /** 主 Tab 切换 */
 function onMainTabChange(val: MainTab) {
   mainTab.value = val
+  fetchModels(val)
 }
 
 onMounted(() => {
-  // 获取模型列表
-  fetchModels()
+  // 获取当前主 Tab 对应的媒体模型列表
+  fetchModels(mainTab.value)
+  // 获取文本模型列表（用于优化描述词）
+  fetchTextModels()
   // 获取枚举配置
   fetchEnums()
   // 获取任务日志列表
@@ -481,7 +568,6 @@ onUnmounted(() => {
             <VideoPanel
               v-if="models.length > 0"
               :models="models"
-              :credits-original="videoCreditsOriginal"
               :is-generating="isGenerating"
               :is-optimizing="isOptimizing"
               :params="videoParams"

@@ -12,12 +12,10 @@ export type VideoParams = {
   resolution: string
   aspect: string
   duration: string
-  count: string
 }
 
 const props = defineProps<{
   models: ModelItem[]
-  creditsOriginal: string
   isGenerating: boolean
   isOptimizing: boolean
   params: VideoParams
@@ -35,10 +33,50 @@ const filteredModels = computed(() =>
   props.models.filter(m => m.modality_type === 'video')
 )
 
-/** 当前选中模型的积分 */
-const credits = computed(() =>
-  filteredModels.value.find(m => m.model_id === props.params.selectedModel)?.prices_format ?? '36'
-)
+/** 当前选中模型按分辨率/时长计算后的销售价 */
+const credits = computed(() => {
+  const model = filteredModels.value.find(m => m.model_id === props.params.selectedModel)
+  if (!model) {
+    return '-'
+  }
+  const resolution = props.enumOptions.resolution.find(o => o.value === props.params.resolution)
+  const duration = parseInt(props.params.duration || '5', 10) || 5
+  const salePrices = model.sale_prices
+
+  let price = 0
+  // 1. 按分辨率计费
+  const sizeKey = resolution?.width && resolution?.height
+    ? `${resolution.width}x${resolution.height}`
+    : ''
+  const qualityKeys = [
+    sizeKey,
+    resolution?.label?.toLowerCase(),
+    resolution?.label?.toUpperCase(),
+  ].filter(Boolean) as string[]
+  for (const key of qualityKeys) {
+    if (salePrices?.resolution_prices?.[key] !== undefined) {
+      price = salePrices.resolution_prices[key]
+      break
+    }
+  }
+
+  // 2. 按时长计费
+  if (price <= 0 && duration > 0) {
+    if (salePrices?.duration_price !== undefined) {
+      price = salePrices.duration_price * duration
+    } else if (salePrices?.first_duration_price !== undefined) {
+      const subsequent = salePrices.subsequent_duration_price ?? 0
+      price = salePrices.first_duration_price + subsequent * (duration - 1)
+    }
+  }
+
+  // 3. 固定每个视频
+  if (price <= 0 && salePrices?.per_video !== undefined) {
+    price = salePrices.per_video
+  }
+
+  return price > 0 ? `¥${price.toFixed(4)}` : (model.prices_format || '-')
+})
 
 // 模型列表变化时自动选中首项
 watch(filteredModels, (list) => {
@@ -53,77 +91,14 @@ const VIDEO_SUB_TABS = [
   { label: '图生视频', value: 'img2video' as VideoSubTab },
 ]
 
-// 硬编码兜底值（与服务端枚举 value 格式一致）
-const FALLBACK_RESOLUTIONS = [
-  { value: '60', label: '480P' },
-  { value: '70', label: '540P' },
-  { value: '80', label: '720P' },
-  { value: '90', label: '1K' },
-  { value: '100', label: '2K' },
-  { value: '110', label: '4K' },
-]
-const FALLBACK_ASPECTS = [
-  { value: '10', label: '21:9' },
-  { value: '20', label: '16:9' },
-  { value: '30', label: '3:2' },
-  { value: '40', label: '4:3' },
-  { value: '50', label: '1:1' },
-  { value: '60', label: '3:4' },
-  { value: '70', label: '2:3' },
-  { value: '80', label: '9:16' },
-]
-const FALLBACK_DURATIONS = [
-  { value: '1', label: '1秒' },
-  { value: '2', label: '2秒' },
-  { value: '3', label: '3秒' },
-  { value: '4', label: '4秒' },
-  { value: '5', label: '5秒' },
-  { value: '6', label: '6秒' },
-  { value: '7', label: '7秒' },
-  { value: '8', label: '8秒' },
-  { value: '9', label: '9秒' },
-  { value: '10', label: '10秒' },
-  { value: '11', label: '11秒' },
-  { value: '12', label: '12秒' },
-  { value: '13', label: '13秒' },
-  { value: '14', label: '14秒' },
-  { value: '15', label: '15秒' },
-]
-const FALLBACK_COUNTS = [
-  { value: '1', label: '1个' },
-  { value: '2', label: '2个' },
-  { value: '3', label: '3个' },
-  { value: '4', label: '4个' },
-  { value: '5', label: '5个' },
-]
+/** 分辨率选项 */
+const resolutionOptions = computed(() => props.enumOptions.resolution)
 
-/** 分辨率选项（枚举优先，兜底硬编码） */
-const resolutionOptions = computed(() =>
-  props.enumOptions.resolution.length > 0
-    ? props.enumOptions.resolution
-    : FALLBACK_RESOLUTIONS
-)
+/** 比例选项 */
+const ratioOptions = computed(() => props.enumOptions.ratio)
 
-/** 比例选项（枚举优先，兜底硬编码） */
-const ratioOptions = computed(() =>
-  props.enumOptions.ratio.length > 0
-    ? props.enumOptions.ratio
-    : FALLBACK_ASPECTS
-)
-
-/** 时长选项（枚举优先，兜底硬编码） */
-const durationOptions = computed(() =>
-  props.enumOptions.duration.length > 0
-    ? props.enumOptions.duration
-    : FALLBACK_DURATIONS
-)
-
-/** 数量选项（枚举优先，兜底硬编码） */
-const countOptions = computed(() =>
-  props.enumOptions.count.length > 0
-    ? props.enumOptions.count
-    : FALLBACK_COUNTS
-)
+/** 时长选项 */
+const durationOptions = computed(() => props.enumOptions.duration)
 
 // 枚举加载后，若当前值不在选项中，自动选中首项
 watch(resolutionOptions, (opts) => {
@@ -141,12 +116,6 @@ watch(durationOptions, (opts) => {
     update('duration', opts[0].value)
   }
 })
-watch(countOptions, (opts) => {
-  if (opts.length > 0 && !opts.find(o => o.value === props.params.count)) {
-    update('count', opts[0].value)
-  }
-})
-
 /** 更新单个字段 */
 function update<K extends keyof VideoParams>(key: K, value: VideoParams[K]) {
   emit('update:params', { ...props.params, [key]: value })
@@ -243,7 +212,7 @@ function update<K extends keyof VideoParams>(key: K, value: VideoParams[K]) {
   </div>
 
   <!-- 视频参数行 -->
-  <div class="grid grid-cols-4 gap-2">
+  <div class="grid grid-cols-3 gap-2">
     <div class="flex flex-col gap-1">
       <label class="text-xs text-content-tertiary">分辨率</label>
       <XbSelect
@@ -271,15 +240,6 @@ function update<K extends keyof VideoParams>(key: K, value: VideoParams[K]) {
         @update:model-value="update('duration', $event)"
       />
     </div>
-    <div class="flex flex-col gap-1">
-      <label class="text-xs text-content-tertiary">数量</label>
-      <XbSelect
-        :model-value="params.count"
-        :options="countOptions"
-        size="sm"
-        @update:model-value="update('count', $event)"
-      />
-    </div>
   </div>
 
   <!-- 生成按钮 -->
@@ -294,8 +254,7 @@ function update<K extends keyof VideoParams>(key: K, value: VideoParams[K]) {
     <span v-else class="flex items-center gap-2">
       生成视频
       <XbIcon name="wand-sparkles" :size="14" />
-      {{ credits }} 积分
-      <span class="text-white/50 line-through text-xs">{{ creditsOriginal }}积分</span>
+      {{ credits }} 余额
     </span>
   </XbButton>
 

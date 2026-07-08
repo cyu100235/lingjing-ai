@@ -1,10 +1,13 @@
-import type { AxiosError, InternalAxiosRequestConfig } from 'axios'
+import { AxiosError } from 'axios'
+import type { InternalAxiosRequestConfig } from 'axios'
+import { isWhitelisted } from './config'
 
 // 获取 Token 的函数类型
 type GetTokenFn = () => string | null
 
 /**
  * 请求拦截器：自动附加 Token
+ * 白名单中的接口无需登录即可访问，非白名单接口必须携带有效 Token
  */
 export function requestInterceptor(getToken: GetTokenFn) {
   return (config: InternalAxiosRequestConfig) => {
@@ -18,9 +21,19 @@ export function requestInterceptor(getToken: GetTokenFn) {
     }
 
     const token = getToken()
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`
+    const url = config.url || ''
+    
+    // 白名单内的接口无需验证 Token
+    if (isWhitelisted(url)) {
+      return config
     }
+
+    // 非白名单接口必须登录，无 Token 则拒绝请求
+    if (!token) {
+      return Promise.reject('登录已过期，请重新登录')
+    }
+
+    config.headers.Authorization = `Bearer ${token}`
     return config
   }
 }

@@ -100,54 +100,54 @@ export interface Article {
  * 获取文章列表
  */
 export const getArticleList = (params?: ArticleListParams): Promise<Article[]> => {
-  return request.get<Article[]>('/xbHelp/api/Article/list', { params })
+  return request.get<Article[]>('/app/xbHelp/api/Article/list', { params })
 }
 
 /**
  * 获取文章详情
  */
 export const getArticleDetail = (params: ArticleDetailParams): Promise<Article> => {
-  return request.get<Article>('/xbHelp/api/Article/detail', { params })
+  return request.get<Article>('/app/xbHelp/api/Article/detail', { params })
 }
 
 /**
  * 搜索文章
  */
 export const searchArticle = (params: ArticleSearchParams): Promise<unknown> => {
-  return request.get<unknown>('/xbHelp/api/Article/search', { params })
+  return request.get<unknown>('/app/xbHelp/api/Article/search', { params })
 }
 
 /**
  * 获取分类列表
  */
 export const getCategoryList = (): Promise<unknown> => {
-  return request.get<unknown>('/xbHelp/api/Category/list')
+  return request.get<unknown>('/app/xbHelp/api/Category/list')
 }
 
 /**
  * 获取分类详情
  */
 export const getCategoryDetail = (params: CategoryDetailParams): Promise<unknown> => {
-  return request.get<unknown>('/xbHelp/api/Category/detail', { params })
+  return request.get<unknown>('/app/xbHelp/api/Category/detail', { params })
 }
 
 /**
  * 标记文章已读
  */
 export const markArticleRead = (params: MarkReadParams): Promise<unknown> => {
-  return request.post<unknown>('/xbHelp/api/ReadLog/markRead', params)
+  return request.post<unknown>('/app/xbHelp/api/ReadLog/markRead', params)
 }
 
 /**
  * 切换文章收藏
  */
 export const toggleFavorite = (params: ToggleFavoriteParams): Promise<unknown> => {
-  return request.post<unknown>('/xbHelp/api/ReadLog/toggleFavorite', params)
+  return request.post<unknown>('/app/xbHelp/api/ReadLog/toggleFavorite', params)
 }
 
 /**
  * 获取收藏列表
  */
 export const getFavorites = (): Promise<unknown> => {
-  return request.get<unknown>('/xbHelp/api/ReadLog/favorites')
+  return request.get<unknown>('/app/xbHelp/api/ReadLog/favorites')
 }

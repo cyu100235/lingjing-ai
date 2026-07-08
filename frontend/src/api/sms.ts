@@ -12,12 +12,12 @@ export interface SendSmsParams {
  * 发送短信（无需登录）
  */
 export const sendSms = (params: SendSmsParams): Promise<unknown> => {
-  return request.get<unknown>('/xbSms/api/Sms/send', { params })
+  return request.get<unknown>('/app/xbSms/api/Sms/send', { params })
 }
 
 /**
  * 发送短信（必须登录）
  */
 export const sendAuthSms = (params: SendSmsParams): Promise<unknown> => {
-  return request.get<unknown>('/xbSms/api/Sms/sendAuth', { params })
+  return request.get<unknown>('/app/xbSms/api/Sms/sendAuth', { params })
 }

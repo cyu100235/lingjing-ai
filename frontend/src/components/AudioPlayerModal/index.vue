@@ -1,6 +1,7 @@
 <script setup lang="ts">
 
 import { formatTime } from '@/utils/media'
+import ModelLogDetailInfo from '@/components/ModelLogDetailInfo/index.vue'
 
 export interface AudioPlayerInfo {
   name: string
@@ -8,10 +9,19 @@ export interface AudioPlayerInfo {
   mediaUrl: string
 }
 
+export interface AudioPlayerDetails {
+  modelName?: string
+  status?: string
+  type?: 'image' | 'video' | 'audio'
+  resolution?: string
+  saleAmount?: string
+}
+
 const props = defineProps<{
   visible: boolean
   media: AudioPlayerInfo | null
   prompt?: string
+  details?: AudioPlayerDetails
 }>()
 
 const emit = defineEmits<{
@@ -149,12 +159,18 @@ function onEnded() {
           <div class="w-[18px]"></div>
         </div>
       </div>
-      <!-- Prompt -->
-      <div v-if="prompt" class="w-[25rem] shrink-0 border-l border-border bg-surface-elevated flex flex-col">
-        <div class="px-4 py-3 border-b border-border flex-shrink-0">
-          <h4 class="text-sm font-medium text-content">提示词</h4>
-        </div>
-        <div class="flex-1 overflow-y-auto px-4 py-3">
+      <!-- Details & Prompt -->
+      <div v-if="prompt || details" class="w-[25rem] shrink-0 border-l border-border bg-surface-elevated flex flex-col">
+        <ModelLogDetailInfo
+          v-if="details"
+          :model-name="details.modelName"
+          :status="details.status"
+          :type="details.type"
+          :resolution="details.resolution"
+          :sale-amount="details.saleAmount"
+        />
+        <div v-if="prompt" class="flex-1 overflow-y-auto px-4 py-3">
+          <h4 class="text-sm font-medium text-content mb-2">提示词</h4>
           <p class="text-xs text-content-secondary leading-relaxed whitespace-pre-wrap break-words">{{ prompt.replace(/\\n/g, '\n') }}</p>
         </div>
       </div>

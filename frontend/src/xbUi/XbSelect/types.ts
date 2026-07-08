@@ -4,3 +4,5 @@ export interface SelectOption {
   disabled?: boolean
   [key: string]: any
 }
+
+export type SelectSize = 'sm' | 'md' | 'lg'

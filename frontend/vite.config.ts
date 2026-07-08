@@ -17,10 +17,14 @@ export default defineConfig({
     },
   },
   server: {
+    watch: {
+      ignored: [path.resolve(__dirname, 'src/utils/request/white.json')],
+    },
     proxy: {
-      '/app': {
-        target: 'http://localhost:39120',
+      '/proxy': {
+        target: 'http://127.0.0.1:39120',
         changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/proxy/, ''),
       },
     },
   },

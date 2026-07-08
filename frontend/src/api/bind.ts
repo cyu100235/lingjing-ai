@@ -32,26 +32,26 @@ export interface UnlockMailParams {
  * 绑定手机
  */
 export const bindMobile = (params: BindMobileParams): Promise<unknown> => {
-  return request.put<unknown>('/xbUser/api/Bind/bindMobile', params)
+  return request.put<unknown>('/app/xbUser/api/Bind/bindMobile', params)
 }
 
 /**
  * 解绑手机
  */
 export const unlockBindMobile = (params: UnlockBindMobileParams): Promise<unknown> => {
-  return request.delete<unknown>('/xbUser/api/Bind/unlockBindMobile', { data: params })
+  return request.delete<unknown>('/app/xbUser/api/Bind/unlockBindMobile', { data: params })
 }
 
 /**
  * 绑定邮箱
  */
 export const bindMail = (params: BindMailParams): Promise<unknown> => {
-  return request.put<unknown>('/xbUser/api/Bind/bindMail', params)
+  return request.put<unknown>('/app/xbUser/api/Bind/bindMail', params)
 }
 
 /**
  * 解绑邮箱
  */
 export const unlockMail = (params: UnlockMailParams): Promise<unknown> => {
-  return request.delete<unknown>('/xbUser/api/Bind/unlockMail', { data: params })
+  return request.delete<unknown>('/app/xbUser/api/Bind/unlockMail', { data: params })
 }
