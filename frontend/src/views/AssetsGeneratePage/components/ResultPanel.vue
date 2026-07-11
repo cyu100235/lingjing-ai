@@ -286,11 +286,13 @@ const isDragging = ref(false)
 const dragStart = ref({ x: 0, y: 0 })
 const dragMoved = ref(false)
 const DRAG_THRESHOLD = 5
+/** 浏览器内全屏（CSS 模拟，不调用 Fullscreen API） */
+const isImageFullscreen = ref(false)
 
 /** 鼠标滚轮缩放（仅全屏模式下可用） */
 function onImageWheel(e: WheelEvent) {
   e.preventDefault()
-  if (document.fullscreenElement !== imagePreviewContainerRef.value) return
+  if (!isImageFullscreen.value) return
   const step = e.deltaY > 0 ? -0.15 : 0.15
   imageScale.value = Math.min(Math.max(imageScale.value + step, 0.5), 5)
 }
@@ -331,33 +333,34 @@ function toggleImageFullscreen() {
     dragMoved.value = false
     return
   }
-  const el = imagePreviewContainerRef.value
-  if (!el) return
-  if (document.fullscreenElement === el) {
-    document.exitFullscreen()
-  } else {
-    el.requestFullscreen()
+  isImageFullscreen.value = !isImageFullscreen.value
+  if (!isImageFullscreen.value) {
+    imageScale.value = 1
+    imageOffset.value = { x: 0, y: 0 }
   }
 }
 
-/** 退出全屏时重置缩放与偏移 */
-function onFullscreenChange() {
-  if (document.fullscreenElement !== imagePreviewContainerRef.value) {
+/** Escape 键退出浏览器内全屏 */
+function onKeyDown(e: KeyboardEvent) {
+  if (e.key === 'Escape' && isImageFullscreen.value) {
+    e.preventDefault()
+    e.stopImmediatePropagation()
+    isImageFullscreen.value = false
     imageScale.value = 1
     imageOffset.value = { x: 0, y: 0 }
   }
 }
 
 onMounted(() => {
-  document.addEventListener('fullscreenchange', onFullscreenChange)
   document.addEventListener('mousemove', onImageMouseMove)
   document.addEventListener('mouseup', onImageMouseUp)
+  document.addEventListener('keydown', onKeyDown)
 })
 
 onUnmounted(() => {
-  document.removeEventListener('fullscreenchange', onFullscreenChange)
   document.removeEventListener('mousemove', onImageMouseMove)
   document.removeEventListener('mouseup', onImageMouseUp)
+  document.removeEventListener('keydown', onKeyDown)
 })
 
 function openPreview(item: ResultItem) {
@@ -396,9 +399,7 @@ function closePreview() {
   previewItem.value = null
   imageScale.value = 1
   imageOffset.value = { x: 0, y: 0 }
-  if (document.fullscreenElement === imagePreviewContainerRef.value) {
-    document.exitFullscreen()
-  }
+  isImageFullscreen.value = false
 }
 
 function statusClass(status?: string) {
@@ -610,6 +611,32 @@ function statusText(status?: string) {
       </div>
     </div>
   </XbModal>
+
+  <!-- 浏览器内全屏图片预览 -->
+  <Teleport to="body">
+    <div
+      v-if="isImageFullscreen"
+      class="fixed inset-0 z-[100] flex items-center justify-center bg-black"
+      @click="toggleImageFullscreen"
+      @wheel.prevent="onImageWheel"
+    >
+      <button
+        class="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+        @click.stop="toggleImageFullscreen"
+      >
+        <XbIcon name="x" :size="20" class="text-white" />
+      </button>
+      <img
+        :src="previewImageSrc"
+        class="max-w-full max-h-full object-contain select-none"
+        :class="isDragging ? 'cursor-grabbing transition-none' : 'cursor-grab transition-transform duration-200'"
+        :style="{ transform: `translate(${imageOffset.x}px, ${imageOffset.y}px) scale(${imageScale})` }"
+        draggable="false"
+        @mousedown.prevent="onImageMouseDown"
+        @click.stop="toggleImageFullscreen"
+      />
+    </div>
+  </Teleport>
 
   <!-- 音频预览弹窗 -->
   <AudioPlayerModal
