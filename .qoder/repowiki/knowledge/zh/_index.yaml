@@ -3,11 +3,11 @@ schema_version: 1
 locale: zh-CN
 branch: main
 nodes_managed: true
-exported_at: "2026-07-08T14:23:07Z"
+exported_at: "2026-07-13T08:41:08Z"
 modules:
     "":
-        dir_name: 积木云 (jymc.dev) — AI 漫画_短剧创作平台
-        title: 积木云 (jymc.dev) — AI 漫画/短剧创作平台
+        dir_name: 戏人漫画创作平台（前后端双进程）
+        title: 戏人漫画创作平台（前后端双进程）
         scope:
             - .gitmodules
             - .gitignore
@@ -18,8 +18,8 @@ modules:
         depends_on: []
         related_to: []
     frontend:
-        dir_name: 戏人 2D 前端应用（Vue3 + Vite）
-        title: 戏人 2D 前端应用（Vue3 + Vite）
+        dir_name: 戏人 2D 创作平台前端（Vue3 SPA）
+        title: 戏人 2D 创作平台前端（Vue3 SPA）
         scope:
             - frontend/
         source_files: []

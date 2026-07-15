@@ -1,6 +1,6 @@
 schema_version: 1
 module_path: ""
-title: 积木云 (jymc.dev) — AI 漫画/短剧创作平台
+title: 戏人漫画创作平台（前后端双进程）
 scope:
     - .gitmodules
     - .gitignore
